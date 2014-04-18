@@ -38,15 +38,15 @@ class Decode(Stage):
         global_data.FU_STATUS['ID'] = True
 
     def execute(self):
-
         if self.cycles > 0:
             self.cycles -= 1
 
     def next(self):
         if self.instruction.opcode in ['HLT','BNE','J','BEQ']:
             global_data.FU_STATUS['ID'] = False
+            self.instruction.ID = str(global_data.CLOCK_CYCLE)
             return None
-        elif self.cycles == 0 and global_data.FU_STATUS['EX'] == False:
+        elif self.cycles == 0 and global_data.FU_STATUS[self.instruction.exec_unit] == False:
             global_data.FU_STATUS['ID'] = False
             self.instruction.ID = str(global_data.CLOCK_CYCLE)
             return Execute(self.instruction)
@@ -60,12 +60,12 @@ class Execute(Stage):
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
     def execute(self):
-        global_data.FU_STATUS['EX'] = True
+        global_data.FU_STATUS[self.instruction.exec_unit] = True
         self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
-            global_data.FU_STATUS['EX'] = False
+            global_data.FU_STATUS[self.instruction.exec_unit] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
         return self

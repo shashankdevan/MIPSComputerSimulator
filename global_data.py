@@ -7,8 +7,8 @@ INSTRUCTIONS = []
 FU_STATUS = {'IF': False,
              'ID': False,
              'IU': False,
-             'FP_Adder': False,
-             'FP_Multiplier': False,
-             'FP_Divider': False,
+             'FPAdder': False,
+             'FPMultiplier': False,
+             'FPDivider': False,
              'WB': False }
 REPEAT = True

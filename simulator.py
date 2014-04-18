@@ -26,11 +26,11 @@ def get_exec_unit(inst):
     if inst.opcode in ['LW', 'SW', 'L.D', 'S.D', 'DADD', 'DSUB', 'DADDI', 'DSUBI', 'OR', 'ORI', 'AND', 'ANDI']:
         inst.exec_unit = 'IU'
     if inst.opcode in ['ADD.D','SUB.D']:
-        inst.exec_unit = 'FP_Adder'
-    if inst.opcode == 'MULT.D':
-        inst.exec_unit = 'FP_Multiplier'
+        inst.exec_unit = 'FPAdder'
+    if inst.opcode in ['MULT.D', 'MUL.D']:
+        inst.exec_unit = 'FPMultiplier'
     if inst.opcode == 'DIV.D':
-        inst.exec_unit = 'FP_Divider'
+        inst.exec_unit = 'FPDivider'
 
 
 def loadInstructions(inst_file):
