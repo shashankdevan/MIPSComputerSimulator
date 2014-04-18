@@ -46,6 +46,13 @@ def loadRegisters(reg_file):
         reg = 'R'
         reg = reg + str(cnt)
         global_data.REGISTERS[reg] = int(line, 2)
+        global_data.RG_STATUS[reg] = False
+
+def loadData(mem_file):
+    addr = 100
+    for line in mem_file:
+        addr += 1
+        global_data.DATA[addr] = int(line, 2)
 
 def get_cycles(stage, opcode):
     if stage == 'IF':
@@ -53,15 +60,17 @@ def get_cycles(stage, opcode):
     elif stage == 'ID':
         return 1
     elif stage == 'EX' and opcode in ['DADD', 'DADDI','DSUB','DSUBI','AND','ANDI','OR','ORI']:
-        return 2
+        return 1
     elif stage == 'EX' and opcode in ['LW','SW','L.D','S.D']:
-        return 2
+        return 1
     elif stage == 'EX' and opcode in ['ADD.D', 'SUB.D']:
         return 4
-    elif stage == 'EX' and opcode in ['MULT.D']:
+    elif stage == 'EX' and opcode in ['MULT.D', 'MUL.D']:
         return 6
     elif stage == 'EX' and opcode in ['DIV.D']:
         return 20
+    elif stage == 'MEM':
+        return 1
     elif stage == 'WB':
         return 1
     else:
@@ -73,13 +82,15 @@ def print_results():
 
 
 def initialize():
-    if (len(sys.argv) != 3):
+    if (len(sys.argv) != 4):
         print "Usage: simulator inst.txt data.txt reg.txt config.txt result.txt"
         exit()
     inst_file = open(sys.argv[1])
-    reg_file = open(sys.argv[2])
+    mem_file = open(sys.argv[2])
+    reg_file = open(sys.argv[3])
     loadInstructions(inst_file)
     loadRegisters(reg_file)
+    loadData(mem_file)
 
 def startSimulation():
     i = 0

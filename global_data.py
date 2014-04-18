@@ -2,7 +2,8 @@ import collections
 
 #globals
 CLOCK_CYCLE = 0
-REGISTERS = collections.defaultdict(lambda: False)
+REGISTERS = {}
+DATA = {}
 INSTRUCTIONS = []
 FU_STATUS = {'IF': False,
              'ID': False,
@@ -10,5 +11,6 @@ FU_STATUS = {'IF': False,
              'FPAdder': False,
              'FPMultiplier': False,
              'FPDivider': False,
+             'MEM': False,
              'WB': False }
-REPEAT = True
+RG_STATUS = collections.defaultdict(lambda: False)

@@ -8,6 +8,7 @@ class Instruction:
         self.IF = "-"
         self.ID = "-"
         self.EX = "-"
+        self.MEM = "-"
         self.WB = "-"
 
     def printInst(self):
@@ -19,4 +20,4 @@ class Instruction:
         elif (len(self.operands) == 0):
             printString = self.opcode + " " + self.dest
 
-        print "%5s %-10s\t%8s\t%8s\t%8s\t%8s" % (self.label, printString, self.IF, self.ID, self.EX, self.WB)
+        print "%5s %-10s\t%8s\t%8s\t%8s\t%8s\t%8s" % (self.label, printString, self.IF, self.ID, self.EX, self.MEM, self.WB)
