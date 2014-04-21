@@ -14,3 +14,8 @@ FU_STATUS = {'IF': False,
              'MEM': False,
              'WB': False }
 RG_STATUS = collections.defaultdict(lambda: False)
+
+
+def reg_status():
+    for reg in RG_STATUS:
+        print reg, RG_STATUS[reg]

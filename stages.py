@@ -38,8 +38,9 @@ class Decode(Stage):
         global_data.FU_STATUS['ID'] = True
 
     def execute(self):
-        if self.cycles > 0:
-            self.cycles -= 1
+        if (self.instruction.regAvailable()):
+            if self.cycles > 0:
+                self.cycles -= 1
 
     def next(self):
         if self.instruction.opcode in ['HLT','BNE','J','BEQ']:
@@ -59,6 +60,9 @@ class Decode(Stage):
             else:
                 return FPDivider(self.instruction)
         else:
+            if self.cycles == 0:
+                self.instruction.Struct = 'Y'
+                return self
             return self
 
 
@@ -69,13 +73,18 @@ class IU(Stage):
 
     def execute(self):
         global_data.FU_STATUS['IU'] = True
-        self.cycles -= 1
+        self.instruction.lockRegisters()
+        if self.cycles > 0:
+            self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['MEM'] == False:
             global_data.FU_STATUS['IU'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return Mem(self.instruction)
+        else:
+            if self.cycles == 0:
+                self.instruction.Struct = 'Y'
         return self
 
 
@@ -86,13 +95,18 @@ class FPAdder(Stage):
 
     def execute(self):
         global_data.FU_STATUS['FPAdder'] = True
-        self.cycles -= 1
+        self.instruction.lockRegisters()
+        if self.cycles > 0:
+            self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
             global_data.FU_STATUS['FPAdder'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
+        else:
+            if self.cycles == 0:
+                self.instruction.Struct = 'Y'
         return self
 
 
@@ -103,13 +117,18 @@ class FPMultiplier(Stage):
 
     def execute(self):
         global_data.FU_STATUS['FPMultiplier'] = True
-        self.cycles -= 1
+        self.instruction.lockRegisters()
+        if self.cycles > 0:
+            self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
             global_data.FU_STATUS['FPMultiplier'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
+        else:
+            if self.cycles == 0:
+                self.instruction.Struct = 'Y'
         return self
 
 
@@ -120,13 +139,18 @@ class FPDivider(Stage):
 
     def execute(self):
         global_data.FU_STATUS['FPDivider'] = True
-        self.cycles -= 1
+        self.instruction.lockRegisters()
+        if self.cycles > 0:
+            self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
             global_data.FU_STATUS['FPDivider'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
+        else:
+            if self.cycles == 0:
+                self.instruction.Struct = 'Y'
         return self
 
 
@@ -137,13 +161,17 @@ class Mem(Stage):
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
-        self.cycles -= 1
+        if self.cycles > 0:
+            self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
             global_data.FU_STATUS['MEM'] = False
-            self.instruction.MEM = str(global_data.CLOCK_CYCLE)
+            self.instruction.EX = str(global_data.CLOCK_CYCLE) #Note here, instruction.EX is updated
             return WriteBack(self.instruction)
+        else:
+            if self.cycles == 0:
+                self.instruction.Struct = 'Y'
         return self
 
 
@@ -154,11 +182,13 @@ class WriteBack(Stage):
 
     def execute(self):
         global_data.FU_STATUS['IF'] = True
-        self.cycles -= 1
+        if self.cycles > 0:
+            self.cycles -= 1
 
     def next(self):
         if self.cycles == 0:
             global_data.FU_STATUS['WB'] = False
+            self.instruction.releaseRegisters()
             self.instruction.WB = str(global_data.CLOCK_CYCLE)
             return None
         return self

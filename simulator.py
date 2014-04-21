@@ -77,6 +77,9 @@ def get_cycles(stage, opcode):
         return 1
 
 def print_results():
+    print '-' * 100
+    print "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s" % (" ", "Instruction", "FT", "ID", "EX", "WB", "RAW", "WAR", "WAW", "Struct")
+    print '-' * 100
     for inst in global_data.INSTRUCTIONS:
         inst.printInst()
 
