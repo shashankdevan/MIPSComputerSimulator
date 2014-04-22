@@ -54,6 +54,24 @@ def loadData(mem_file):
         addr += 1
         global_data.DATA[addr] = int(line, 2)
 
+def loadConfig(config_file):
+    for line in config_file:
+        FU = ''.join(line[:line.index(':')].upper().strip().split())
+        tokens = line[line.index(':') + 1:].strip().split(',')
+        if len(tokens) == 2:
+            if (FU == "FPADDER"):
+                global_data.FU_CYCLES['FPAdder'] = int(tokens[0])
+                global_data.FU_PIPELINED['FPAdder'] = tokens[1]
+            elif (FU == "FPMULTIPLIER"):
+                global_data.FU_CYCLES['FPMultiplier'] = int(tokens[0])
+                global_data.FU_PIPELINED['FPMultiplier'] = tokens[1]
+            elif (FU == "FPDIVIDER"):
+                global_data.FU_CYCLES['FPDivider'] = int(tokens[0])
+                global_data.FU_PIPELINED['FPDivider'] = tokens[1]
+            else:
+                pass
+        #put code to store I-Cache and D-Cache nos.
+
 def get_cycles(stage, opcode):
     if stage == 'IF':
         return 1
@@ -64,11 +82,11 @@ def get_cycles(stage, opcode):
     elif stage == 'EX' and opcode in ['LW','SW','L.D','S.D']:
         return 1
     elif stage == 'EX' and opcode in ['ADD.D', 'SUB.D']:
-        return 4
+        return global_data.FU_CYCLES['FPAdder']
     elif stage == 'EX' and opcode in ['MULT.D', 'MUL.D']:
-        return 6
+        return global_data.FU_CYCLES['FPMultiplier']
     elif stage == 'EX' and opcode in ['DIV.D']:
-        return 20
+        return global_data.FU_CYCLES['FPDivider']
     elif stage == 'MEM':
         return 1
     elif stage == 'WB':
@@ -85,15 +103,17 @@ def print_results():
 
 
 def initialize():
-    if (len(sys.argv) != 4):
+    if (len(sys.argv) != 5):
         print "Usage: simulator inst.txt data.txt reg.txt config.txt result.txt"
         exit()
     inst_file = open(sys.argv[1])
     mem_file = open(sys.argv[2])
     reg_file = open(sys.argv[3])
+    config_file = open(sys.argv[4])
     loadInstructions(inst_file)
     loadRegisters(reg_file)
     loadData(mem_file)
+    loadConfig(config_file)
 
 def startSimulation():
     i = 0

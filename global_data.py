@@ -15,6 +15,8 @@ FU_STATUS = {'IF': False,
              'WB': False }
 RG_STATUS = collections.defaultdict(lambda: False)
 
+FU_CYCLES = collections.defaultdict(lambda: 0)
+FU_PIPELINED = collections.defaultdict(lambda: False)
 
 def reg_status():
     for reg in RG_STATUS:

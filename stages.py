@@ -43,7 +43,7 @@ class Decode(Stage):
                 self.cycles -= 1
 
     def next(self):
-        if self.instruction.opcode in ['HLT','BNE','J','BEQ']:
+        if self.instruction.opcode in ['HLT','BNE','J','BEQ'] and self.cycles == 0:
             global_data.FU_STATUS['ID'] = False
             self.instruction.ID = str(global_data.CLOCK_CYCLE)
             return None
@@ -94,7 +94,9 @@ class FPAdder(Stage):
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
     def execute(self):
-        global_data.FU_STATUS['FPAdder'] = True
+        if global_data.FU_PIPELINED['FPAdder'] == 'no':
+            global_data.FU_STATUS['FPAdder'] = True
+
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
@@ -116,7 +118,8 @@ class FPMultiplier(Stage):
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
     def execute(self):
-        global_data.FU_STATUS['FPMultiplier'] = True
+        if global_data.FU_PIPELINED['FPMultiplier'] == 'no':
+            global_data.FU_STATUS['FPMultiplier'] = True
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
@@ -138,7 +141,8 @@ class FPDivider(Stage):
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
     def execute(self):
-        global_data.FU_STATUS['FPDivider'] = True
+        if global_data.FU_PIPELINED['FPDivider'] == 'no':
+            global_data.FU_STATUS['FPDivider'] = True
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
@@ -181,7 +185,7 @@ class WriteBack(Stage):
         self.cycles = get_cycles('WB', self.instruction.opcode)
 
     def execute(self):
-        global_data.FU_STATUS['IF'] = True
+        global_data.FU_STATUS['WB'] = True
         if self.cycles > 0:
             self.cycles -= 1
 
