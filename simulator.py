@@ -120,23 +120,33 @@ def startSimulation():
     pipeline = deque()
 
     fetch_stage = Fetch(global_data.INSTRUCTIONS[i])
+    fetch_stage.execute()
     pipeline.append(fetch_stage)
 
     while(len(pipeline) > 0):
-        global_data.CLOCK_CYCLE += 1
-        size = len(pipeline)
-        while(size > 0):
-            curr_stage = pipeline.popleft()
-            curr_stage.execute()
-            next_stage = curr_stage.next()
+        for stage in ['WB', 'EX', 'ID', 'IF']:
+            save_size = len(pipeline)
+            while(save_size > 0):
+                curr_stage = pipeline.popleft()
 
-            if (next_stage != None):
-                pipeline.append(next_stage)
-            size -= 1
+                if curr_stage.name == stage:
+                    next_stage = curr_stage.next()
+
+                    if (next_stage != None):
+                        next_stage.execute()
+                        pipeline.append(next_stage)
+                    else:
+                        save_size -= 1
+                else:
+                    pipeline.append(curr_stage)
+                save_size -= 1
 
         if(global_data.FU_STATUS['IF'] == False and (i+1) < len(global_data.INSTRUCTIONS)):
             i += 1
-            pipeline.append(Fetch(global_data.INSTRUCTIONS[i]))
+            new_fetch_stage = Fetch(global_data.INSTRUCTIONS[i])
+            new_fetch_stage.execute()
+            pipeline.append(new_fetch_stage)
+        global_data.CLOCK_CYCLE += 1
 
     print_results()
 

@@ -15,6 +15,7 @@ class Stage:
 
 class Fetch(Stage):
     def __init__(self, instruction):
+        self.name = 'IF'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('IF', self.instruction.opcode)
         global_data.FU_STATUS['IF'] = True
@@ -33,11 +34,12 @@ class Fetch(Stage):
 
 class Decode(Stage):
     def __init__(self, instruction):
+        self.name = 'ID'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('ID', self.instruction.opcode)
-        global_data.FU_STATUS['ID'] = True
 
     def execute(self):
+        global_data.FU_STATUS['ID'] = True
         if (self.instruction.regAvailable()):
             if self.cycles > 0:
                 self.cycles -= 1
@@ -68,6 +70,7 @@ class Decode(Stage):
 
 class IU(Stage):
     def __init__(self, instruction):
+        self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
@@ -90,6 +93,7 @@ class IU(Stage):
 
 class FPAdder(Stage):
     def __init__(self, instruction):
+        self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
@@ -114,6 +118,7 @@ class FPAdder(Stage):
 
 class FPMultiplier(Stage):
     def __init__(self, instruction):
+        self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
@@ -137,6 +142,7 @@ class FPMultiplier(Stage):
 
 class FPDivider(Stage):
     def __init__(self, instruction):
+        self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('EX', self.instruction.opcode)
 
@@ -160,6 +166,7 @@ class FPDivider(Stage):
 
 class Mem(Stage):
     def __init__(self, instruction):
+        self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('MEM', self.instruction.opcode)
 
@@ -181,18 +188,19 @@ class Mem(Stage):
 
 class WriteBack(Stage):
     def __init__(self, instruction):
+        self.name = 'WB'
         Stage.__init__(self, instruction)
         self.cycles = get_cycles('WB', self.instruction.opcode)
 
     def execute(self):
         global_data.FU_STATUS['WB'] = True
+        self.instruction.releaseRegisters()
         if self.cycles > 0:
             self.cycles -= 1
 
     def next(self):
         if self.cycles == 0:
             global_data.FU_STATUS['WB'] = False
-            self.instruction.releaseRegisters()
             self.instruction.WB = str(global_data.CLOCK_CYCLE)
-            return None
+        return None
         return self

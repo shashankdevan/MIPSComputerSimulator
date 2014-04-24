@@ -1,7 +1,7 @@
 import collections
 
 #globals
-CLOCK_CYCLE = 0
+CLOCK_CYCLE = 1
 REGISTERS = {}
 DATA = {}
 INSTRUCTIONS = []
@@ -17,7 +17,12 @@ RG_STATUS = collections.defaultdict(lambda: False)
 
 FU_CYCLES = collections.defaultdict(lambda: 0)
 FU_PIPELINED = collections.defaultdict(lambda: False)
+WB_USED = False
 
 def reg_status():
     for reg in RG_STATUS:
         print reg, RG_STATUS[reg]
+
+
+def resetFlags():
+    WB_USED = False
