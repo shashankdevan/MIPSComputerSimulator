@@ -19,8 +19,9 @@ class Instruction:
         self.offset = 0
 
     def processOperand(self):
-        self.offset = self.operands[:int(self.operands[0].index('('))]
-        self.operands[0] = self.operands[0][int(self.operands[0].index('(')) + 1: int(self.operands[0].index(')'))]
+        if '(' in self.operands[0]:
+            self.offset = int(self.operands[0][:int(self.operands[0].index('('))])
+            self.operands[0] = self.operands[0][int(self.operands[0].index('(')) + 1: int(self.operands[0].index(')'))]
 
     def regAvailable(self):
         if self.opcode in ['LW', 'L.D']:

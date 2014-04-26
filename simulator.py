@@ -2,7 +2,7 @@ from collections import deque
 from instruction import *
 from stages import *
 import collections, sys
-import global_data
+import global_data, d_cache
 
 def parseInstruction(line):
     operands = []
@@ -49,10 +49,10 @@ def loadRegisters(reg_file):
         global_data.RG_STATUS[reg] = False
 
 def loadData(mem_file):
-    addr = 100
+    addr = 256
     for line in mem_file:
-        addr += 1
         global_data.DATA[addr] = int(line, 2)
+        addr += 4
 
 def loadConfig(config_file):
     for line in config_file:
@@ -72,21 +72,29 @@ def loadConfig(config_file):
                 pass
         #put code to store I-Cache and D-Cache nos.
 
-def get_cycles(stage, opcode):
+def get_cycles(stage, instruction):
     if stage == 'IF':
         return 1
     elif stage == 'ID':
         return 1
-    elif stage == 'EX' and opcode in ['DADD', 'DADDI','DSUB','DSUBI','AND','ANDI','OR','ORI']:
+    elif stage == 'EX' and instruction.opcode in ['DADD', 'DADDI','DSUB','DSUBI','AND','ANDI','OR','ORI']:
         return 1
-    elif stage == 'EX' and opcode in ['LW','SW','L.D','S.D']:
+    elif stage == 'EX' and instruction.opcode in ['LW','SW','L.D','S.D']:
         return 1
-    elif stage == 'EX' and opcode in ['ADD.D', 'SUB.D']:
+    elif stage == 'EX' and instruction.opcode in ['ADD.D', 'SUB.D']:
         return global_data.FU_CYCLES['FPAdder']
-    elif stage == 'EX' and opcode in ['MULT.D', 'MUL.D']:
+    elif stage == 'EX' and instruction.opcode in ['MULT.D', 'MUL.D']:
         return global_data.FU_CYCLES['FPMultiplier']
-    elif stage == 'EX' and opcode in ['DIV.D']:
+    elif stage == 'EX' and instruction.opcode in ['DIV.D']:
         return global_data.FU_CYCLES['FPDivider']
+    elif stage == 'MEM' and instruction.opcode in ['LW','SW']:
+        address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
+        data, cycles = global_data.dcache.fetch_word(address ,1)
+        return cycles
+    elif stage == 'MEM' and instruction.opcode in ['L.D','S.D']:
+        address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
+        data, cycles = global_data.dcache.fetch_word(address ,2)
+        return cycles
     elif stage == 'MEM':
         return 1
     elif stage == 'WB':
@@ -115,6 +123,7 @@ def initialize():
     loadData(mem_file)
     loadConfig(config_file)
 
+
 def startSimulation():
     i = 0
     pipeline = deque()
@@ -124,7 +133,7 @@ def startSimulation():
     pipeline.append(fetch_stage)
 
     while(len(pipeline) > 0):
-        for stage in ['WB', 'EX', 'ID', 'IF']:
+        for stage in ['WB', 'EX', 'IU', 'ID', 'IF']:
             save_size = len(pipeline)
             while(save_size > 0):
                 curr_stage = pipeline.popleft()

@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from simulator import *
+import simulator
 import time
+import global_data
 
 class Stage:
     def __init__(self, instruction):
@@ -17,7 +18,7 @@ class Fetch(Stage):
     def __init__(self, instruction):
         self.name = 'IF'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('IF', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('IF', self.instruction)
         global_data.FU_STATUS['IF'] = True
 
     def execute(self):
@@ -36,7 +37,7 @@ class Decode(Stage):
     def __init__(self, instruction):
         self.name = 'ID'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('ID', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('ID', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['ID'] = True
@@ -70,9 +71,9 @@ class Decode(Stage):
 
 class IU(Stage):
     def __init__(self, instruction):
-        self.name = 'EX'
+        self.name = 'IU'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('EX', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['IU'] = True
@@ -95,7 +96,7 @@ class FPAdder(Stage):
     def __init__(self, instruction):
         self.name = 'EX'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('EX', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
         if global_data.FU_PIPELINED['FPAdder'] == 'no':
@@ -120,7 +121,7 @@ class FPMultiplier(Stage):
     def __init__(self, instruction):
         self.name = 'EX'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('EX', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
         if global_data.FU_PIPELINED['FPMultiplier'] == 'no':
@@ -144,7 +145,7 @@ class FPDivider(Stage):
     def __init__(self, instruction):
         self.name = 'EX'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('EX', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
         if global_data.FU_PIPELINED['FPDivider'] == 'no':
@@ -168,7 +169,7 @@ class Mem(Stage):
     def __init__(self, instruction):
         self.name = 'EX'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('MEM', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('MEM', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
@@ -178,7 +179,7 @@ class Mem(Stage):
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
             global_data.FU_STATUS['MEM'] = False
-            self.instruction.EX = str(global_data.CLOCK_CYCLE) #Note here, instruction.EX is updated
+            self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
         else:
             if self.cycles == 0:
@@ -190,7 +191,7 @@ class WriteBack(Stage):
     def __init__(self, instruction):
         self.name = 'WB'
         Stage.__init__(self, instruction)
-        self.cycles = get_cycles('WB', self.instruction.opcode)
+        self.cycles = simulator.get_cycles('WB', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['WB'] = True
