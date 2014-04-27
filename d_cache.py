@@ -7,6 +7,7 @@ class CacheBlock:
         self.TAG = tag
         self.words = words
         self.FLAG = True
+        self.DIRTY = False
 
 class Cache:
     def __init__(self, cache_blk_rows):

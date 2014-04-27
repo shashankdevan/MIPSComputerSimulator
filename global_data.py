@@ -1,11 +1,13 @@
 import collections
 import d_cache
+import simulator
 
 #globals
 CLOCK_CYCLE = 1
 REGISTERS = {}
 DATA = {}
 INSTRUCTIONS = []
+RESULT_LIST = []
 FU_STATUS = {'IF': False,
              'ID': False,
              'IU': False,
@@ -19,6 +21,7 @@ RG_STATUS = collections.defaultdict(lambda: False)
 FU_CYCLES = collections.defaultdict(lambda: 0)
 FU_PIPELINED = collections.defaultdict(lambda: False)
 WB_USED = False
+FLUSH = False
 
 DATA_SEGMENT_BASE_ADDR = 256
 
@@ -36,6 +39,11 @@ cache_blk_rows.append(blk_row2)
 
 dcache = d_cache.Cache(cache_blk_rows)
 
+
+def get_label_index(label):
+    for i in range(len(INSTRUCTIONS)):
+        if INSTRUCTIONS[i].label == label:
+            return i
 
 def reg_status():
     for reg in RG_STATUS:

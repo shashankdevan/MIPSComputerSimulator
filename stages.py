@@ -24,12 +24,23 @@ class Fetch(Stage):
     def execute(self):
         if self.cycles > 0:
             self.cycles -= 1
+        return -1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['ID'] == False:
             global_data.FU_STATUS['IF'] = False
             self.instruction.IF = str(global_data.CLOCK_CYCLE)
             return Decode(self.instruction)
+        else:
+            return self
+
+    def flush(self):
+        if self.cycles == 0:
+            global_data.FU_STATUS['IF'] = False
+            self.instruction.IF = str(global_data.CLOCK_CYCLE)
+            global_data.FLUSH = False
+            global_data.RESULT_LIST.append(self.instruction)
+            return None
         else:
             return self
 
@@ -40,15 +51,28 @@ class Decode(Stage):
         self.cycles = simulator.get_cycles('ID', self.instruction)
 
     def execute(self):
+        NEW_PC = -1
         global_data.FU_STATUS['ID'] = True
         if (self.instruction.regAvailable()):
             if self.cycles > 0:
                 self.cycles -= 1
+            if self.cycles == 0:
+                if self.instruction.opcode == 'BNE':
+                    if global_data.REGISTERS[self.instruction.dest] != global_data.REGISTERS[self.instruction.operands[0]]:
+                        global_data.FLUSH = True
+                        NEW_PC = global_data.get_label_index(self.instruction.operands[1])
+                if self.instruction.opcode == 'BEQ':
+                    if global_data.REGISTERS[self.instruction.dest] == global_data.REGISTERS[self.instruction.operands[0]]:
+                        global_data.FLUSH = True
+                        NEW_PC = global_data.get_label_index(self.instruction.operands[1])
+
+        return NEW_PC
 
     def next(self):
         if self.instruction.opcode in ['HLT','BNE','J','BEQ'] and self.cycles == 0:
             global_data.FU_STATUS['ID'] = False
             self.instruction.ID = str(global_data.CLOCK_CYCLE)
+            global_data.RESULT_LIST.append(self.instruction)
             return None
         elif self.cycles == 0 and global_data.FU_STATUS[self.instruction.exec_unit] == False:
             global_data.FU_STATUS['ID'] = False
@@ -74,12 +98,36 @@ class IU(Stage):
         self.name = 'IU'
         Stage.__init__(self, instruction)
         self.cycles = simulator.get_cycles('EX', self.instruction)
+        self.TO_EXECUTE = True
 
     def execute(self):
         global_data.FU_STATUS['IU'] = True
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
+
+        if self.TO_EXECUTE:
+            if self.instruction.opcode == 'DADD':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] + global_data.REGISTERS[self.instruction.operands[1]]
+            elif self.instruction.opcode == 'DADDI':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] + int(self.instruction.operands[1])
+            elif self.instruction.opcode == 'DSUB':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] - global_data.REGISTERS[self.instruction.operands[1]]
+            elif self.instruction.opcode == 'DSUBI':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] - int(self.instruction.operands[1])
+            elif self.instruction.opcode == 'AND':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] & global_data.REGISTERS[self.instruction.operands[1]]
+            elif self.instruction.opcode == 'ANDI':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] & int(self.instruction.operands[1])
+            elif self.instruction.opcode == 'OR':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] | global_data.REGISTERS[self.instruction.operands[1]]
+            elif self.instruction.opcode == 'ORI':
+                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] | int(self.instruction.operands[1])
+            else:
+                pass
+            self.TO_EXECUTE = False
+
+        return -1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['MEM'] == False:
@@ -105,6 +153,7 @@ class FPAdder(Stage):
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
+        return -1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
@@ -129,6 +178,7 @@ class FPMultiplier(Stage):
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
+        return -1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
@@ -153,6 +203,7 @@ class FPDivider(Stage):
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
+        return -1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
@@ -175,6 +226,7 @@ class Mem(Stage):
         global_data.FU_STATUS['MEM'] = True
         if self.cycles > 0:
             self.cycles -= 1
+        return -1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
@@ -198,10 +250,12 @@ class WriteBack(Stage):
         self.instruction.releaseRegisters()
         if self.cycles > 0:
             self.cycles -= 1
+        return -1
 
     def next(self):
         if self.cycles == 0:
             global_data.FU_STATUS['WB'] = False
             self.instruction.WB = str(global_data.CLOCK_CYCLE)
-        return None
+            global_data.RESULT_LIST.append(self.instruction)
+            return None
         return self

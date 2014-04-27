@@ -3,6 +3,7 @@ from instruction import *
 from stages import *
 import collections, sys
 import global_data, d_cache
+import copy
 
 def parseInstruction(line):
     operands = []
@@ -47,6 +48,7 @@ def loadRegisters(reg_file):
         reg = reg + str(cnt)
         global_data.REGISTERS[reg] = int(line, 2)
         global_data.RG_STATUS[reg] = False
+
 
 def loadData(mem_file):
     addr = 256
@@ -103,12 +105,13 @@ def get_cycles(stage, instruction):
         return 1
 
 def print_results():
+    global_data.RESULT_LIST.sort(key = lambda x: int(x.IF))
+
     print '-' * 100
     print "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s" % (" ", "Instruction", "FT", "ID", "EX", "WB", "RAW", "WAR", "WAW", "Struct")
     print '-' * 100
-    for inst in global_data.INSTRUCTIONS:
+    for inst in global_data.RESULT_LIST:
         inst.printInst()
-
 
 def initialize():
     if (len(sys.argv) != 5):
@@ -125,24 +128,27 @@ def initialize():
 
 
 def startSimulation():
-    i = 0
     pipeline = deque()
-
-    fetch_stage = Fetch(global_data.INSTRUCTIONS[i])
+    i = NEW_PC = 0
+    fetch_stage = Fetch(copy.deepcopy(global_data.INSTRUCTIONS[i]))
     fetch_stage.execute()
     pipeline.append(fetch_stage)
 
     while(len(pipeline) > 0):
         for stage in ['WB', 'EX', 'IU', 'ID', 'IF']:
             save_size = len(pipeline)
+
             while(save_size > 0):
                 curr_stage = pipeline.popleft()
 
                 if curr_stage.name == stage:
-                    next_stage = curr_stage.next()
+                    if global_data.FLUSH:
+                        next_stage = curr_stage.flush()
+                    else:
+                        next_stage = curr_stage.next()
 
                     if (next_stage != None):
-                        next_stage.execute()
+                        NEW_PC = next_stage.execute()
                         pipeline.append(next_stage)
                     else:
                         save_size -= 1
@@ -150,12 +156,18 @@ def startSimulation():
                     pipeline.append(curr_stage)
                 save_size -= 1
 
-        if(global_data.FU_STATUS['IF'] == False and (i+1) < len(global_data.INSTRUCTIONS)):
-            i += 1
-            new_fetch_stage = Fetch(global_data.INSTRUCTIONS[i])
-            new_fetch_stage.execute()
-            pipeline.append(new_fetch_stage)
+        if(global_data.FU_STATUS['IF'] == False):
+           if NEW_PC != -1:
+               i = NEW_PC
+           else:
+               i += 1
+           if i < len(global_data.INSTRUCTIONS):
+               new_fetch_stage = Fetch(copy.deepcopy(global_data.INSTRUCTIONS[i]))
+               new_fetch_stage.execute()
+               pipeline.append(new_fetch_stage)
+
         global_data.CLOCK_CYCLE += 1
+
 
     print_results()
 
