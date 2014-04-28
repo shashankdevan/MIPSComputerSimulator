@@ -17,6 +17,7 @@ class Instruction:
         self.RAW = '-'
         self.WAR = '-'
         self.offset = 0
+        self.FLUSH_FLAG = False
 
     def processOperand(self):
         if '(' in self.operands[0]:

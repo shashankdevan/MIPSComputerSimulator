@@ -21,7 +21,9 @@ RG_STATUS = collections.defaultdict(lambda: False)
 FU_CYCLES = collections.defaultdict(lambda: 0)
 FU_PIPELINED = collections.defaultdict(lambda: False)
 WB_USED = False
-FLUSH = False
+FLUSH_NEXT = False
+JUMP = False
+JUMP_TO = 0
 
 DATA_SEGMENT_BASE_ADDR = 256
 

@@ -137,18 +137,16 @@ def startSimulation():
     while(len(pipeline) > 0):
         for stage in ['WB', 'EX', 'IU', 'ID', 'IF']:
             save_size = len(pipeline)
-
             while(save_size > 0):
                 curr_stage = pipeline.popleft()
-
                 if curr_stage.name == stage:
-                    if global_data.FLUSH:
+                    if curr_stage.instruction.FLUSH_FLAG:
                         next_stage = curr_stage.flush()
                     else:
                         next_stage = curr_stage.next()
 
                     if (next_stage != None):
-                        NEW_PC = next_stage.execute()
+                        next_stage.execute()
                         pipeline.append(next_stage)
                     else:
                         save_size -= 1
@@ -157,18 +155,21 @@ def startSimulation():
                 save_size -= 1
 
         if(global_data.FU_STATUS['IF'] == False):
-           if NEW_PC != -1:
-               i = NEW_PC
-           else:
-               i += 1
-           if i < len(global_data.INSTRUCTIONS):
-               new_fetch_stage = Fetch(copy.deepcopy(global_data.INSTRUCTIONS[i]))
-               new_fetch_stage.execute()
-               pipeline.append(new_fetch_stage)
+            if global_data.JUMP:
+                i = global_data.JUMP_TO
+                global_data.JUMP = False
+            else:
+                i += 1
+            if i < len(global_data.INSTRUCTIONS):
+                next_inst = copy.deepcopy(global_data.INSTRUCTIONS[i])
+                if global_data.FLUSH_NEXT:
+                    next_inst.FLUSH_FLAG = True
+                    global_data.FLUSH_NEXT = False
+                new_fetch_stage = Fetch(next_inst)
+                new_fetch_stage.execute()
+                pipeline.append(new_fetch_stage)
 
         global_data.CLOCK_CYCLE += 1
-
-
     print_results()
 
 if __name__ == '__main__':
