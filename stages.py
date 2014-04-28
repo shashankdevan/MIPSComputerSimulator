@@ -54,22 +54,31 @@ class Decode(Stage):
     def execute(self):
         global_data.FU_STATUS['ID'] = True
 
-        if self.SETTING_FLUSH_NEXT:
-                self.SETTING_FLUSH_NEXT = False
-                if self.instruction.opcode == 'BNE':
-                    if global_data.REGISTERS[self.instruction.dest] != global_data.REGISTERS[self.instruction.operands[0]]:
-                        global_data.FLUSH_NEXT = True
-                        self.NEW_PC = global_data.get_label_index(self.instruction.operands[1])
-                        self.TAKE_BRANCH = True
-                if self.instruction.opcode == 'BEQ':
-                    if global_data.REGISTERS[self.instruction.dest] == global_data.REGISTERS[self.instruction.operands[0]]:
-                        global_data.FLUSH_NEXT = True
-                        NEW_PC = global_data.get_label_index(self.instruction.operands[1])
-
         if (self.instruction.regAvailable()):
             if self.cycles > 0:
                 self.cycles -= 1
 
+            if self.cycles == 0:
+                if self.instruction.opcode == 'BNE':
+                    if global_data.REGISTERS[self.instruction.dest] != global_data.REGISTERS[self.instruction.operands[0]]:
+                        for stage in global_data.pipeline:
+                            if stage.__class__.__name__ == "Fetch":
+                                stage.instruction.FLUSH_FLAG = True
+                        self.NEW_PC = global_data.get_label_index(self.instruction.operands[1])
+                        self.TAKE_BRANCH = True
+
+                if self.instruction.opcode == 'BEQ':
+                    if global_data.REGISTERS[self.instruction.dest] == global_data.REGISTERS[self.instruction.operands[0]]:
+                        if stage.__class__.__name__ == "Fetch":
+                            stage.instruction.FLUSH_FLAG = True
+                        self.NEW_PC = global_data.get_label_index(self.instruction.operands[1])
+                        self.TAKE_BRANCH = True
+
+                if self.instruction.opcode == 'J':
+                    if stage.__class__.__name__ == "Fetch":
+                        stage.instruction.FLUSH_FLAG = True
+                    self.NEW_PC = global_data.get_label_index(self.instruction.dest)
+                    self.TAKE_BRANCH = True
 
     def next(self):
         if self.instruction.opcode in ['HLT','BNE','J','BEQ'] and self.cycles == 0:
@@ -115,21 +124,21 @@ class IU(Stage):
 
         if self.TO_EXECUTE:
             if self.instruction.opcode == 'DADD':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] + global_data.REGISTERS[self.instruction.operands[1]]
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] + global_data.REGISTERS[self.instruction.operands[1]]
             elif self.instruction.opcode == 'DADDI':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] + int(self.instruction.operands[1])
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] + int(self.instruction.operands[1])
             elif self.instruction.opcode == 'DSUB':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] - global_data.REGISTERS[self.instruction.operands[1]]
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] - global_data.REGISTERS[self.instruction.operands[1]]
             elif self.instruction.opcode == 'DSUBI':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] - int(self.instruction.operands[1])
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] - int(self.instruction.operands[1])
             elif self.instruction.opcode == 'AND':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] & global_data.REGISTERS[self.instruction.operands[1]]
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] & global_data.REGISTERS[self.instruction.operands[1]]
             elif self.instruction.opcode == 'ANDI':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] & int(self.instruction.operands[1])
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] & int(self.instruction.operands[1])
             elif self.instruction.opcode == 'OR':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] | global_data.REGISTERS[self.instruction.operands[1]]
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] | global_data.REGISTERS[self.instruction.operands[1]]
             elif self.instruction.opcode == 'ORI':
-                global_data.REGISTERS[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] | int(self.instruction.operands[1])
+                global_data.REGISTER_LATCH[self.instruction.dest] = global_data.REGISTERS[self.instruction.operands[0]] | int(self.instruction.operands[1])
             else:
                 pass
             self.TO_EXECUTE = False
@@ -246,6 +255,9 @@ class WriteBack(Stage):
 
     def execute(self):
         global_data.FU_STATUS['WB'] = True
+        for key in global_data.REGISTER_LATCH:
+            global_data.REGISTERS[key] = global_data.REGISTER_LATCH[key]
+        global_data.REGISTER_LATCH.clear()
         self.instruction.releaseRegisters()
         if self.cycles > 0:
             self.cycles -= 1

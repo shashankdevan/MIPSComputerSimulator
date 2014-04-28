@@ -1,10 +1,13 @@
 import collections
 import d_cache
 import simulator
+from collections import deque
 
 #globals
+pipeline = deque()
 CLOCK_CYCLE = 1
 REGISTERS = {}
+REGISTER_LATCH = {}
 DATA = {}
 INSTRUCTIONS = []
 RESULT_LIST = []
