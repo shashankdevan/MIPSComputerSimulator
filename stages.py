@@ -246,7 +246,6 @@ class Mem(Stage):
         self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = simulator.get_cycles('MEM', self.instruction)
-        # self.cycles = 1
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True

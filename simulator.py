@@ -66,13 +66,13 @@ def loadConfig(config_file):
         if len(tokens) == 2:
             if (FU == "FPADDER"):
                 global_data.FU_CYCLES['FPAdder'] = int(tokens[0])
-                global_data.FU_PIPELINED['FPAdder'] = tokens[1]
+                global_data.FU_PIPELINED['FPAdder'] = tokens[1].strip()
             elif (FU == "FPMULTIPLIER"):
                 global_data.FU_CYCLES['FPMultiplier'] = int(tokens[0])
-                global_data.FU_PIPELINED['FPMultiplier'] = tokens[1]
+                global_data.FU_PIPELINED['FPMultiplier'] = tokens[1].strip()
             elif (FU == "FPDIVIDER"):
                 global_data.FU_CYCLES['FPDivider'] = int(tokens[0])
-                global_data.FU_PIPELINED['FPDivider'] = tokens[1]
+                global_data.FU_PIPELINED['FPDivider'] = tokens[1].strip()
             else:
                 pass
         #put code to store I-Cache and D-Cache nos.

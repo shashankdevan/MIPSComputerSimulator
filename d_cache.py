@@ -14,7 +14,7 @@ class Cache:
         self.cache = cache_blk_rows
 
     def fetch_data(self, address):
-        # global_data.DCACHE_ACCESS += 1 #replace this
+        global_data.DCACHE_ACCESS += 1 #replace this
 
         blk_row = ((address & 112) >> 4) & 1
         tag = (address & 112) >> 5
