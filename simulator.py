@@ -89,9 +89,14 @@ def get_cycles(stage, instruction):
         return global_data.FU_CYCLES['FPMultiplier']
     elif stage == 'EX' and instruction.opcode in ['DIV.D']:
         return global_data.FU_CYCLES['FPDivider']
-    elif stage == 'MEM' and instruction.opcode in ['LW','SW']:
+    elif stage == 'MEM' and instruction.opcode in ['LW']:
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         data, cycles = global_data.dcache.fetch_word(address ,1)
+        global_data.REGISTERS[instruction.operands[0]] = data
+        return cycles
+    elif stage == 'MEM' and instruction.opcode in ['SW']:
+        address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
+        cycles = global_data.dcache.store_word(address, global_data.REGISTERS[instruction.dest], 1)
         return cycles
     elif stage == 'MEM' and instruction.opcode in ['L.D','S.D']:
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset

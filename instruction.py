@@ -36,8 +36,8 @@ class Instruction:
             return not(dest_blocked) and not(source_blocked)
         elif self.opcode in ['SW', 'S.D']:
             self.processOperand()
-            dest_blocked = global_data.RG_STATUS[self.dest]
-            source_blocked = global_data.RG_STATUS[self.operands[0]]
+            dest_blocked = global_data.RG_STATUS[self.operands[0]]
+            source_blocked = global_data.RG_STATUS[self.dest]
             if source_blocked:
                 self.RAW = 'Y'
             return not(source_blocked)
