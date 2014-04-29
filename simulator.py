@@ -2,7 +2,7 @@ from collections import deque
 from instruction import *
 from stages import *
 import collections, sys
-import global_data, d_cache
+import global_data, stages, d_cache
 import copy
 
 def parseInstruction(line):
@@ -35,10 +35,13 @@ def get_exec_unit(inst):
 
 
 def loadInstructions(inst_file):
+    cnt = 0
     for line in inst_file:
         inst = parseInstruction(line)
+        inst.index = cnt
         get_exec_unit(inst)
         global_data.INSTRUCTIONS.append(inst)
+        cnt += 1
 
 def loadRegisters(reg_file):
     cnt = -1
@@ -76,7 +79,8 @@ def loadConfig(config_file):
 
 def get_cycles(stage, instruction):
     if stage == 'IF':
-        return 1
+        # print global_data.icache.readInstruction(instruction.index)
+        return global_data.icache.readInstruction(instruction.index)
     elif stage == 'ID':
         return 1
     elif stage == 'EX' and instruction.opcode in ['DADD', 'DADDI','DSUB','DSUBI','AND','ANDI','OR','ORI']:
@@ -90,15 +94,18 @@ def get_cycles(stage, instruction):
     elif stage == 'EX' and instruction.opcode in ['DIV.D']:
         return global_data.FU_CYCLES['FPDivider']
     elif stage == 'MEM' and instruction.opcode in ['LW']:
+        # pass
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         data, cycles = global_data.dcache.fetch_word(address ,1)
         global_data.REGISTERS[instruction.operands[0]] = data
         return cycles
     elif stage == 'MEM' and instruction.opcode in ['SW']:
+        # pass
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         cycles = global_data.dcache.store_word(address, global_data.REGISTERS[instruction.dest], 1)
         return cycles
     elif stage == 'MEM' and instruction.opcode in ['L.D','S.D']:
+        # pass
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         data, cycles = global_data.dcache.fetch_word(address ,2)
         return cycles
@@ -131,6 +138,11 @@ def initialize():
     loadData(mem_file)
     loadConfig(config_file)
 
+def displayStatistics():
+    print "Total number of requests to instruction cache: " + str(global_data.ICACHE_ACCESS)
+    print "Total number of instruction cache hits: " + str(global_data.ICACHE_HIT)
+    print "Total number of requests to data cache: " + str(global_data.DCACHE_ACCESS)
+    print "Total number of data cache hits: " + str(global_data.DCACHE_HIT)
 
 def startSimulation():
     i = 0
@@ -166,6 +178,9 @@ def startSimulation():
                 i += 1
             if i < len(global_data.INSTRUCTIONS):
                 next_inst = copy.deepcopy(global_data.INSTRUCTIONS[i])
+                if global_data.SET_FLUSH_NEXT:
+                    next_inst.FLUSH_FLAG = True
+                    global_data.SET_FLUSH_NEXT = False
                 new_fetch_stage = Fetch(next_inst)
                 new_fetch_stage.execute()
                 global_data.pipeline.append(new_fetch_stage)
@@ -176,3 +191,5 @@ def startSimulation():
 if __name__ == '__main__':
     initialize()
     startSimulation()
+    print '\n\n\n'
+    displayStatistics()

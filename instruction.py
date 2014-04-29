@@ -2,6 +2,7 @@ import global_data
 
 class Instruction:
     def __init__(self, label, opcode, dest, operands):
+        self.index = 0
         self.label = label
         self.opcode = opcode
         self.dest = dest
@@ -43,6 +44,7 @@ class Instruction:
             return not(source_blocked)
         elif self.opcode in ['BEQ', 'BNE']:
             dest_blocked = global_data.RG_STATUS[self.dest]
+            # print self.operands
             source_blocked = global_data.RG_STATUS[self.operands[0]]
             if dest_blocked or source_blocked:
                 self.RAW = 'Y'

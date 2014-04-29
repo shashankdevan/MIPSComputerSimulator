@@ -50,6 +50,7 @@ class Decode(Stage):
         self.NEW_PC = 0
         self.TAKE_BRANCH = False
         self.SETTING_FLUSH_NEXT = True
+        self.FLAG = False
 
     def execute(self):
         global_data.FU_STATUS['ID'] = True
@@ -63,20 +64,34 @@ class Decode(Stage):
                     if global_data.REGISTERS[self.instruction.dest] != global_data.REGISTERS[self.instruction.operands[0]]:
                         for stage in global_data.pipeline:
                             if stage.__class__.__name__ == "Fetch":
+                                self.FLAG = True
                                 stage.instruction.FLUSH_FLAG = True
+                        if not self.FLAG:
+                            global_data.SET_FLUSH_NEXT = True
+                            self.FLAG = True
                         self.NEW_PC = global_data.get_label_index(self.instruction.operands[1])
                         self.TAKE_BRANCH = True
 
                 if self.instruction.opcode == 'BEQ':
                     if global_data.REGISTERS[self.instruction.dest] == global_data.REGISTERS[self.instruction.operands[0]]:
-                        if stage.__class__.__name__ == "Fetch":
-                            stage.instruction.FLUSH_FLAG = True
+                        for stage in global_data.pipeline:
+                            if stage.__class__.__name__ == "Fetch":
+                                self.FLAG = True
+                                stage.instruction.FLUSH_FLAG = True
+                        if not self.FLAG:
+                            global_data.SET_FLUSH_NEXT = True
+                            self.FLAG = True
                         self.NEW_PC = global_data.get_label_index(self.instruction.operands[1])
                         self.TAKE_BRANCH = True
 
                 if self.instruction.opcode == 'J':
-                    if stage.__class__.__name__ == "Fetch":
-                        stage.instruction.FLUSH_FLAG = True
+                    for stage in global_data.pipeline:
+                        if stage.__class__.__name__ == "Fetch":
+                            self.FLAG = True
+                            stage.instruction.FLUSH_FLAG = True
+                    if not self.FLAG:
+                        global_data.SET_FLUSH_NEXT = True
+                        self.FLAG = True
                     self.NEW_PC = global_data.get_label_index(self.instruction.dest)
                     self.TAKE_BRANCH = True
 
@@ -231,6 +246,7 @@ class Mem(Stage):
         self.name = 'EX'
         Stage.__init__(self, instruction)
         self.cycles = simulator.get_cycles('MEM', self.instruction)
+        # self.cycles = 1
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
