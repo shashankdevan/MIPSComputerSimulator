@@ -30,7 +30,10 @@ JUMP = False
 JUMP_TO = 0
 
 DATA_SEGMENT_BASE_ADDR = 256
-MEMORY_BUS_BUSY = False
+JUST_ENTERED_BUS = False
+# MEMORY_BUS_BUSY = False
+ICACHE_USING_BUS = False
+DCACHE_USING_BUS = False
 
 blk_row1 = []
 blk_row1.append(d_cache.CacheBlock(0, [0,0,0,0]))

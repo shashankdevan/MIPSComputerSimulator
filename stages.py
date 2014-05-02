@@ -22,25 +22,39 @@ class Fetch(Stage):
         global_data.FU_STATUS['IF'] = True
 
     def execute(self):
-        if self.cycles > 0:
+        if self.instruction.MISSED_ICACHE:
+            # print self.instruction.opcode + " wants memory bus in cycle: " + str(global_data.CLOCK_CYCLE) + " but DCACHE_USING_BUS " + str(global_data.DCACHE_USING_BUS)
+            if not global_data.DCACHE_USING_BUS:
+                global_data.ICACHE_USING_BUS = True
+                if self.cycles > 0:
+                    self.cycles -= 1
+
+        elif self.cycles > 0:
             self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['ID'] == False:
             global_data.FU_STATUS['IF'] = False
+            global_data.ICACHE_USING_BUS = False
             self.instruction.IF = str(global_data.CLOCK_CYCLE)
             return Decode(self.instruction)
-        else:
-            return self
+        elif self.cycles == 0:
+            global_data.ICACHE_USING_BUS = False
+            self.instruction.MISSED_ICACHE = False
+        return self
 
     def flush(self):
         if self.cycles == 0 and global_data.FU_STATUS['ID'] == False:
+            # print "In FLUSH and Decode is free "
             global_data.FU_STATUS['IF'] = False
+            global_data.ICACHE_USING_BUS = False
             self.instruction.IF = str(global_data.CLOCK_CYCLE)
             global_data.RESULT_LIST.append(self.instruction)
             return None
-        else:
-            return self
+        elif self.cycles == 0:
+            global_data.ICACHE_USING_BUS = False
+            self.instruction.MISSED_ICACHE = False
+        return self
 
 class Decode(Stage):
     def __init__(self, instruction):
@@ -100,6 +114,7 @@ class Decode(Stage):
             if self.TAKE_BRANCH:
                 global_data.JUMP = True
                 global_data.JUMP_TO = self.NEW_PC
+                print "Jump to?-- " + str(global_data.JUMP_TO)
                 self.TAKE_BRANCH = False
 
             global_data.FU_STATUS['ID'] = False
@@ -244,22 +259,34 @@ class FPDivider(Stage):
 class Mem(Stage):
     def __init__(self, instruction):
         self.name = 'EX'
+        self.ONLY_ONCE = True
         Stage.__init__(self, instruction)
         self.cycles = simulator.get_cycles('MEM', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
-        if self.cycles > 0:
+        if self.instruction.MISSED_DCACHE:
+            if not global_data.ICACHE_USING_BUS:
+                # print self.instruction.opcode + " seizing memory bus in cycle: " + str(global_data.CLOCK_CYCLE)
+                global_data.DCACHE_USING_BUS = True
+                if self.ONLY_ONCE:
+                    self.ONLY_ONCE = False
+                    global_data.JUST_ENTERED_BUS = True
+                if self.cycles > 0:
+                    self.cycles -= 1
+        elif self.cycles > 0:
             self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
             global_data.FU_STATUS['MEM'] = False
+            global_data.DCACHE_USING_BUS = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
-        else:
-            if self.cycles == 0:
-                self.instruction.Struct = 'Y'
+        elif self.cycles == 0:
+            self.instruction.MISSED_DCACHE = False
+            global_data.DCACHE_USING_BUS = False
+            self.instruction.Struct = 'Y'
         return self
 
 class WriteBack(Stage):
@@ -269,7 +296,8 @@ class WriteBack(Stage):
         self.cycles = simulator.get_cycles('WB', self.instruction)
 
     def execute(self):
-        global_data.FU_STATUS['WB'] = True
+        if self.instruction.opcode == 'LW':
+            global_data.FU_STATUS['WB'] = True
         for key in global_data.REGISTER_LATCH:
             global_data.REGISTERS[key] = global_data.REGISTER_LATCH[key]
         global_data.REGISTER_LATCH.clear()

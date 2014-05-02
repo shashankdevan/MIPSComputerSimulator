@@ -14,7 +14,7 @@ class Cache:
         self.cache = cache_blk_rows
 
     def fetch_data(self, address):
-        global_data.DCACHE_ACCESS += 1 #replace this
+        global_data.DCACHE_ACCESS += 1
 
         blk_row = ((address & 112) >> 4) & 1
         tag = (address & 112) >> 5
@@ -22,22 +22,14 @@ class Cache:
         HIT = False
         return_value = 0
 
-        #check if present in cache
         for blk in self.cache[blk_row]:
             if (blk.isValid == True and blk.TAG == tag):
                 global_data.DCACHE_HIT += 1
-
                 HIT = True
-                return_value += 1
-                return blk.words[word_idx], return_value
+                return_value = 1
+                return global_data.DATA[address], return_value
 
-        #get from memory if it's a MISS
         if not HIT:
-            # if global_data.MEMORY_BUS_BUSY:
-                # print "MEMORY BUS BUSY!"
-                #waiting for bus to get free, returning bus-contention=True
-                # return 0, 0, True
-
             global_data.DCACHE_MISS += 1
 
             start_addr = (address & 112) + global_data.DATA_SEGMENT_BASE_ADDR
@@ -49,9 +41,8 @@ class Cache:
             incoming_blk = CacheBlock(tag, incoming_blk_contents)
 
             if self.cache[blk_row][0].LRU_FLAG:
-                #write if for dirty bit = true
+
                 if self.cache[blk_row][0].DIRTY:
-                    self.writeToMemory(self.cache[blk_row][0], blk_row)
                     return_value += 6
                 self.cache[blk_row][0] = incoming_blk
                 self.cache[blk_row][0].LRU_FLAG = False
@@ -61,9 +52,8 @@ class Cache:
                 return_value += 6
 
             elif self.cache[blk_row][1].LRU_FLAG:
-                #write if for dirty bit = true
+
                 if self.cache[blk_row][0].DIRTY:
-                    self.writeToMemory(self.cache[blk_row][1], blk_row)
                     return_value += 6
                 self.cache[blk_row][1] = incoming_blk
                 self.cache[blk_row][1].LRU_FLAG = False
@@ -71,9 +61,7 @@ class Cache:
                 self.cache[blk_row][0].LRU_FLAG = True
                 self.cache[blk_row][1].isValid = True
                 return_value += 6
-            else:
-                print "None of the blocks available! LRU not proper!" #can remove this line
-            return incoming_blk_contents[word_idx], return_value
+            return global_data.REGISTERS[address], return_value
 
     def fetch_word(self, address, n):
         result = []
@@ -96,32 +84,23 @@ class Cache:
         HIT = False
         return_value = 0
 
-        #check if present in cache
         for blk in self.cache[blk_row]:
             if (blk.isValid == True and blk.TAG == tag):
                 global_data.DCACHE_HIT += 1
 
                 HIT = True
                 blk.DIRTY = True
-                blk.words[word_idx] = data
+                global_data.DATA[address] = data
                 return_value += 1
                 return return_value
 
-        #not present in cache
         if not HIT:
-            if global_data.MEMORY_BUS_BUSY:
-                #waiting for bus to get free, returning bus-contention=True
-                return 0, 0, True
-
             global_data.DCACHE_MISS += 1
-            global_data.DATA[address] = data #write data to memory
+            global_data.DATA[address] = data
 
             if self.cache[blk_row][0].LRU_FLAG:
-                #write if for dirty bit = true
                 if self.cache[blk_row][0].DIRTY:
                     return_value += 6
-                    self.writeToMemory(self.cache[blk_row][0], blk_row)
-                self.cache[blk_row][0].words[word_idx] = data
                 self.cache[blk_row][0].LRU_FLAG = False
                 self.cache[blk_row][0].DIRTY = False
                 self.cache[blk_row][1].LRU_FLAG = True
@@ -129,18 +108,13 @@ class Cache:
                 return_value += 6
 
             elif self.cache[blk_row][1].LRU_FLAG:
-                #write if for dirty bit = true
                 if self.cache[blk_row][0].DIRTY:
                     return_value += 6
-                    self.writeToMemory(self.cache[blk_row][1], blk_row)
-                self.cache[blk_row][1].words[word_idx] = data
                 self.cache[blk_row][1].LRU_FLAG = False
                 self.cache[blk_row][1].DIRTY = False
                 self.cache[blk_row][0].LRU_FLAG = True
                 self.cache[blk_row][1].isValid = True
                 return_value += 6
-            else:
-                print "None of the blocks available! LRU not proper!" #can remove this line
             return return_value
 
     def store_word(self, address, data, n):
@@ -152,22 +126,3 @@ class Cache:
         for i in range(4):
             j = i * 4
             global_data.DATA[start_addr + j] = blk.words[i]
-
-if __name__ == '__main__':
-    data_file = open('data.txt')
-    simulator.loadData(data_file)
-
-    blk_row1 = []
-    blk_row1.append(CacheBlock(0, [2,65,112,84]))
-    blk_row1.append(CacheBlock(2, [4,50,25,120]))
-
-    blk_row2 = []
-    blk_row2.append(CacheBlock(1, [2,65,112,84]))
-    blk_row2.append(CacheBlock(2, [4,50,118,120]))
-
-    cache_blk_rows = []
-    cache_blk_rows.append(blk_row1)
-    cache_blk_rows.append(blk_row2)
-
-    dcache = Cache(cache_blk_rows)
-    print dcache.fetch_data(118)

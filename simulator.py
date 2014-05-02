@@ -79,8 +79,10 @@ def loadConfig(config_file):
 
 def get_cycles(stage, instruction):
     if stage == 'IF':
-        # print global_data.icache.readInstruction(instruction.index)
-        return global_data.icache.readInstruction(instruction.index)
+        cycles = global_data.icache.readInstruction(instruction.index)
+        if cycles != 1:
+            instruction.MISSED_ICACHE = True
+        return cycles
     elif stage == 'ID':
         return 1
     elif stage == 'EX' and instruction.opcode in ['DADD', 'DADDI','DSUB','DSUBI','AND','ANDI','OR','ORI']:
@@ -93,19 +95,23 @@ def get_cycles(stage, instruction):
         return global_data.FU_CYCLES['FPMultiplier']
     elif stage == 'EX' and instruction.opcode in ['DIV.D']:
         return global_data.FU_CYCLES['FPDivider']
+
     elif stage == 'MEM' and instruction.opcode in ['LW']:
-        # pass
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         data, cycles = global_data.dcache.fetch_word(address ,1)
-        global_data.REGISTERS[instruction.operands[0]] = data
+        global_data.REGISTERS[instruction.dest] = data
+        if cycles != 1:
+            instruction.MISSED_DCACHE = True
         return cycles
+
     elif stage == 'MEM' and instruction.opcode in ['SW']:
-        # pass
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         cycles = global_data.dcache.store_word(address, global_data.REGISTERS[instruction.dest], 1)
+        if cycles != 1:
+            instruction.MISSED_DCACHE = True
         return cycles
     elif stage == 'MEM' and instruction.opcode in ['L.D','S.D']:
-        # pass
+        # handle the dcache miss for double word - free bus after use is done
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
         data, cycles = global_data.dcache.fetch_word(address ,2)
         return cycles
@@ -151,6 +157,10 @@ def startSimulation():
     global_data.pipeline.append(fetch_stage)
 
     while(len(global_data.pipeline) > 0):
+        # print "**************" + str(global_data.CLOCK_CYCLE) + "*******************"
+        # for s in global_data.pipeline:
+            # print s.instruction.opcode + " " + s.instruction.dest
+        # print "---INNER LOOP---"
         for stage in ['WB', 'EX', 'IU', 'ID', 'IF']:
             save_size = len(global_data.pipeline)
             while(save_size > 0):
@@ -158,9 +168,10 @@ def startSimulation():
                 if curr_stage.name == stage:
                     if curr_stage.instruction.FLUSH_FLAG:
                         next_stage = curr_stage.flush()
+                        # print curr_stage.instruction.opcode + " going from " + curr_stage.__class__.__name__ + " to " + next_stage.__class__.__name__ + " to flush"
                     else:
                         next_stage = curr_stage.next()
-
+                        # print curr_stage.instruction.opcode + " going from " + curr_stage.__class__.__name__ + " to " + next_stage.__class__.__name__
                     if (next_stage != None):
                         next_stage.execute()
                         global_data.pipeline.append(next_stage)
@@ -169,15 +180,29 @@ def startSimulation():
                 else:
                     global_data.pipeline.append(curr_stage)
                 save_size -= 1
+        # print "\n\n"
 
+        # print "Cn fetch? " + str(global_data.FU_STATUS['IF'])
         if(global_data.FU_STATUS['IF'] == False):
+            # print "In Main Loop JUMP = " + str(global_data.JUMP)
             if global_data.JUMP:
                 i = global_data.JUMP_TO
                 global_data.JUMP = False
+                # print "got to jump to " + str(i)
             else:
+                # print "Did not go into JUMP IF"
                 i += 1
             if i < len(global_data.INSTRUCTIONS):
                 next_inst = copy.deepcopy(global_data.INSTRUCTIONS[i])
+                # print "Fetched " + next_inst.opcode
+                index = i
+                cache_row = (index >> 2) & 3
+                tag = index >> 4
+                if (not global_data.icache.cache[cache_row].isValid) or global_data.icache.cache[cache_row].TAG != tag:
+                    # print "ICACHE MISS while fetching " + next_inst.opcode
+                    if global_data.JUST_ENTERED_BUS:
+                        global_data.DCACHE_USING_BUS = False
+
                 if global_data.SET_FLUSH_NEXT:
                     next_inst.FLUSH_FLAG = True
                     global_data.SET_FLUSH_NEXT = False
@@ -185,7 +210,9 @@ def startSimulation():
                 new_fetch_stage.execute()
                 global_data.pipeline.append(new_fetch_stage)
 
+        global_data.JUST_ENTERED_BUS = False
         global_data.CLOCK_CYCLE += 1
+
     print_results()
 
 if __name__ == '__main__':

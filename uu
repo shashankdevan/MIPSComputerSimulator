@@ -1,0 +1,597 @@
+DSUBI wants memory bus in cycle: 1 but DCACHE_USING_BUS False
+branching condition: R2= 1 R3= 1
+**************1*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Fetch
+DSUBI wants memory bus in cycle: 1 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 0
+**************2*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Fetch
+DSUBI wants memory bus in cycle: 2 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 0
+**************3*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Fetch
+DSUBI wants memory bus in cycle: 3 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 0
+**************4*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Fetch
+DSUBI wants memory bus in cycle: 4 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 0
+**************5*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Fetch
+DSUBI wants memory bus in cycle: 5 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 0
+**************6*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched SW
+branching condition: R2= 1 R3= 1
+Next PC = 1
+**************7*******************
+DSUBI R1
+SW R1
+---INNER LOOP---
+DSUBI going from Decode to IU
+-------R1--->3
+SW going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched LW
+branching condition: R2= 1 R3= 1
+Next PC = 2
+**************8*******************
+DSUBI R1
+SW R1
+LW R3
+---INNER LOOP---
+DSUBI going from IU to Mem
+SW going from Decode to Decode
+LW going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 2
+**************9*******************
+DSUBI R1
+SW R1
+LW R3
+---INNER LOOP---
+DSUBI going from Mem to WriteBack
+-------R3 in WB--->1
+-------R1 in WB--->1
+SW going from Decode to Decode
+LW going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 2
+**************10*******************
+DSUBI R1
+SW R1
+LW R3
+---INNER LOOP---
+DSUBI going from WriteBack to NoneType
+SW going from Decode to IU
+LW going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched BEQ
+branching condition: R2= 1 R3= 1
+Next PC = 3
+**************11*******************
+LW R3
+SW R1
+BEQ R3
+---INNER LOOP---
+SW going from IU to Mem
+SW seizing memory bus in cycle: 11
+LW going from Decode to IU
+BEQ going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched HLT
+ICACHE MISS while fetching HLT
+HLT wants memory bus in cycle: 11 but DCACHE_USING_BUS False
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************12*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+HLT wants memory bus in cycle: 12 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************13*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+HLT wants memory bus in cycle: 13 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************14*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+HLT wants memory bus in cycle: 14 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************15*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+HLT wants memory bus in cycle: 15 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************16*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+HLT wants memory bus in cycle: 16 but DCACHE_USING_BUS False
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************17*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************18*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+SW seizing memory bus in cycle: 18
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************19*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+SW seizing memory bus in cycle: 19
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************20*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+SW seizing memory bus in cycle: 20
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************21*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+SW seizing memory bus in cycle: 21
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************22*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to Mem
+SW seizing memory bus in cycle: 22
+LW going from IU to IU
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************23*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to WriteBack
+-------R3 in WB--->1
+-------R1 in WB--->1
+Data being loaded into R3= 1
+LW going from IU to Mem
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************24*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from WriteBack to NoneType
+LW going from Mem to WriteBack
+LW writing to REG in 24
+-------R3 in WB--->1
+-------R1 in WB--->1
+BEQ going from Decode to Decode
+branching condition satisfied! 1 1
+HLT going from Fetch to Fetch to flush
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************25*******************
+HLT 
+LW R3
+BEQ R3
+---INNER LOOP---
+LW going from WriteBack to NoneType
+Jump to?-- 0
+In decode BNE does global_data.FU_STATUS['ID'] False on clock cycle 25
+BEQ going from Decode to NoneType
+In FLUSH and Decode is free 
+HLT going from Fetch to NoneType to flush
+
+
+
+Cn fetch? False
+In Main Loop JUMP = True
+got to jump to 0
+Fetched DSUBI
+branching condition: R2= 1 R3= 1
+Next PC = 0
+**************26*******************
+DSUBI R1
+---INNER LOOP---
+DSUBI going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched SW
+branching condition: R2= 1 R3= 1
+Next PC = 1
+**************27*******************
+DSUBI R1
+SW R1
+---INNER LOOP---
+DSUBI going from Decode to IU
+-------R1--->1
+SW going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched LW
+branching condition: R2= 1 R3= 1
+Next PC = 2
+**************28*******************
+DSUBI R1
+SW R1
+LW R3
+---INNER LOOP---
+DSUBI going from IU to Mem
+SW going from Decode to Decode
+LW going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 2
+**************29*******************
+DSUBI R1
+SW R1
+LW R3
+---INNER LOOP---
+DSUBI going from Mem to WriteBack
+-------R3 in WB--->1
+-------R1 in WB--->-1
+SW going from Decode to Decode
+LW going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= 1
+Next PC = 2
+**************30*******************
+DSUBI R1
+SW R1
+LW R3
+---INNER LOOP---
+DSUBI going from WriteBack to NoneType
+SW going from Decode to IU
+LW going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched BEQ
+branching condition: R2= 1 R3= 1
+Next PC = 3
+**************31*******************
+LW R3
+SW R1
+BEQ R3
+---INNER LOOP---
+SW going from IU to Mem
+LW going from Decode to IU
+BEQ going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched HLT
+branching condition: R2= 1 R3= 1
+Next PC = 4
+**************32*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from Mem to WriteBack
+-------R3 in WB--->1
+-------R1 in WB--->-1
+Data being loaded into R3= -1
+LW going from IU to Mem
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= -1
+Next PC = 4
+**************33*******************
+LW R3
+SW R1
+BEQ R3
+HLT 
+---INNER LOOP---
+SW going from WriteBack to NoneType
+LW going from Mem to WriteBack
+LW writing to REG in 33
+-------R3 in WB--->-1
+-------R1 in WB--->-1
+BEQ going from Decode to Decode
+HLT going from Fetch to Fetch
+
+
+
+Cn fetch? True
+branching condition: R2= 1 R3= -1
+Next PC = 4
+**************34*******************
+HLT 
+LW R3
+BEQ R3
+---INNER LOOP---
+LW going from WriteBack to NoneType
+In decode BNE does global_data.FU_STATUS['ID'] False on clock cycle 34
+BEQ going from Decode to NoneType
+HLT going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+Fetched HLT
+branching condition: R2= 1 R3= -1
+Next PC = 5
+**************35*******************
+HLT 
+HLT 
+---INNER LOOP---
+In decode BNE does global_data.FU_STATUS['ID'] False on clock cycle 35
+HLT going from Decode to NoneType
+HLT going from Fetch to Decode
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+branching condition: R2= 1 R3= -1
+Next PC = 6
+**************36*******************
+HLT 
+---INNER LOOP---
+In decode BNE does global_data.FU_STATUS['ID'] False on clock cycle 36
+HLT going from Decode to NoneType
+
+
+
+Cn fetch? False
+In Main Loop JUMP = False
+Did not go into JUMP IF
+branching condition: R2= 1 R3= -1
+Next PC = 7
+----------------------------------------------------------------------------------------------------
+      Instruction	   FT	   ID	   EX	   WB	  RAW	  WAR	  WAW	Struct
+----------------------------------------------------------------------------------------------------
+   GG DSUBI R1, R1, 2	    6	    7	    9	   10	    -	    -	    -	    -
+      SW R1, R4 	    7	   10	   23	   24	    Y	    -	    -	    -
+      LW R3, R4 	   10	   11	   24	   25	    -	    -	    -	    Y
+      BEQ R3, R2, GG	   11	   25	    -	    -	    Y	    -	    -	    -
+      HLT       	   25	    -	    -	    -	    -	    -	    -	    -
+   GG DSUBI R1, R1, 2	   26	   27	   29	   30	    -	    -	    -	    -
+      SW R1, R4 	   27	   30	   32	   33	    Y	    -	    -	    -
+      LW R3, R4 	   30	   31	   33	   34	    -	    -	    -	    -
+      BEQ R3, R2, GG	   31	   34	    -	    -	    Y	    -	    -	    -
+      HLT       	   34	   35	    -	    -	    -	    -	    -	    -
+      HLT       	   35	   36	    -	    -	    -	    -	    -	    -
+
+
+
+
+Total number of requests to instruction cache: 11
+Total number of instruction cache hits: 9
+Total number of requests to data cache: 4
+Total number of data cache hits: 3

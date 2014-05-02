@@ -19,6 +19,8 @@ class Instruction:
         self.WAR = '-'
         self.offset = 0
         self.FLUSH_FLAG = False
+        self.MISSED_ICACHE = False
+        self.MISSED_DCACHE = False
 
     def processOperand(self):
         if '(' in self.operands[0]:
