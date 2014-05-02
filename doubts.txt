@@ -1,2 +1,0 @@
-Project PPT page 9: Why does IF of SUB.D finish on the 8th cycle, and not before?
-Why does it have to wait until ID of previous (ADD.D) to complete?

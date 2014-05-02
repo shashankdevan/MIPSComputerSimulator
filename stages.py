@@ -45,7 +45,6 @@ class Fetch(Stage):
 
     def flush(self):
         if self.cycles == 0 and global_data.FU_STATUS['ID'] == False:
-            # print "In FLUSH and Decode is free "
             global_data.FU_STATUS['IF'] = False
             global_data.ICACHE_USING_BUS = False
             self.instruction.IF = str(global_data.CLOCK_CYCLE)
@@ -114,7 +113,6 @@ class Decode(Stage):
             if self.TAKE_BRANCH:
                 global_data.JUMP = True
                 global_data.JUMP_TO = self.NEW_PC
-                print "Jump to?-- " + str(global_data.JUMP_TO)
                 self.TAKE_BRANCH = False
 
             global_data.FU_STATUS['ID'] = False

@@ -180,7 +180,6 @@ def startSimulation():
                 else:
                     global_data.pipeline.append(curr_stage)
                 save_size -= 1
-        # print "\n\n"
 
         # print "Cn fetch? " + str(global_data.FU_STATUS['IF'])
         if(global_data.FU_STATUS['IF'] == False):
@@ -188,9 +187,7 @@ def startSimulation():
             if global_data.JUMP:
                 i = global_data.JUMP_TO
                 global_data.JUMP = False
-                # print "got to jump to " + str(i)
             else:
-                # print "Did not go into JUMP IF"
                 i += 1
             if i < len(global_data.INSTRUCTIONS):
                 next_inst = copy.deepcopy(global_data.INSTRUCTIONS[i])
