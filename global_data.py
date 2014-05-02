@@ -5,6 +5,13 @@ from collections import deque
 
 #globals
 pipeline = deque()
+
+IFQueue = deque()
+IDQueue = deque()
+IUQueue = deque()
+EXQueue = deque()
+WBQueue = deque()
+
 CLOCK_CYCLE = 1
 REGISTERS = {}
 REGISTER_LATCH = {}

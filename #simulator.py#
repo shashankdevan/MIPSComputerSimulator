@@ -114,6 +114,7 @@ def get_cycles(stage, instruction):
         if cycles != 1:
             instruction.MISSED_DCACHE = True
         return cycles
+    
     elif stage == 'MEM' and instruction.opcode in ['L.D','S.D']:
         # handle the dcache miss for double word - free bus after use is done
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
@@ -121,6 +122,7 @@ def get_cycles(stage, instruction):
         if cycles != 1:
             instruction.MISSED_DCACHE = True
         return cycles
+    
     elif stage == 'MEM':
         return 1
     elif stage == 'WB':

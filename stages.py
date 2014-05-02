@@ -7,6 +7,8 @@ class Stage:
     def __init__(self, instruction):
         self.instruction = instruction
         self.cycles = 0
+        self.priority = 0
+        self.exec_cycles = 0
 
     @abstractmethod
     def execute(self): pass
