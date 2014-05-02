@@ -263,15 +263,17 @@ class Mem(Stage):
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
-        if self.instruction.MISSED_DCACHE:
-            if not global_data.ICACHE_USING_BUS:
-                # print self.instruction.opcode + " seizing memory bus in cycle: " + str(global_data.CLOCK_CYCLE)
-                global_data.DCACHE_USING_BUS = True
+        if self.cycles == 6:
+            if self.instruction.MISSED_DCACHE:
+                if not global_data.ICACHE_USING_BUS:
+                    # print self.instruction.opcode + " seizing memory bus in cycle: " + str(global_data.CLOCK_CYCLE)
+                    global_data.DCACHE_USING_BUS = True
                 if self.ONLY_ONCE:
                     self.ONLY_ONCE = False
                     global_data.JUST_ENTERED_BUS = True
                 if self.cycles > 0:
                     self.cycles -= 1
+        # if self.cycles ==
         elif self.cycles > 0:
             self.cycles -= 1
 
@@ -294,8 +296,7 @@ class WriteBack(Stage):
         self.cycles = simulator.get_cycles('WB', self.instruction)
 
     def execute(self):
-        if self.instruction.opcode == 'LW':
-            global_data.FU_STATUS['WB'] = True
+        global_data.FU_STATUS['WB'] = True
         for key in global_data.REGISTER_LATCH:
             global_data.REGISTERS[key] = global_data.REGISTER_LATCH[key]
         global_data.REGISTER_LATCH.clear()

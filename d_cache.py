@@ -61,15 +61,20 @@ class Cache:
                 self.cache[blk_row][0].LRU_FLAG = True
                 self.cache[blk_row][1].isValid = True
                 return_value += 6
-            return global_data.REGISTERS[address], return_value
+            return global_data.DATA[address], return_value
 
     def fetch_word(self, address, n):
         result = []
         total_cycles = 0
-        for i in range(n):
-            word, cycles = self.fetch_data(address + i*4)
-            result.append(word)
-            total_cycles += cycles
+        word, cycles = self.fetch_data(address)
+        result.append(word)
+        total_cycles += cycles
+
+        word, cycles = self.fetch_data(address + 4)
+        result.append(word)
+        total_cycles += cycles
+
+        # if total_cycles[0] == 1 and total_cycles[1] == 1:
         if n == 2:
             result[0] = (result[0] << 32) | result[1]
         return result[0], total_cycles
