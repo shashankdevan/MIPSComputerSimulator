@@ -25,7 +25,6 @@ class Fetch(Stage):
 
     def execute(self):
         if self.instruction.MISSED_ICACHE:
-            # print self.instruction.opcode + " wants memory bus in cycle: " + str(global_data.CLOCK_CYCLE) + " but DCACHE_USING_BUS " + str(global_data.DCACHE_USING_BUS)
             if not global_data.DCACHE_USING_BUS:
                 global_data.ICACHE_USING_BUS = True
                 if self.cycles > 0:
@@ -127,9 +126,9 @@ class Decode(Stage):
 
             if self.instruction.exec_unit == 'IU':
                 return IU(self.instruction)
-            elif self.instruction.exec_unit == 'FPAdder':
+            elif self.instruction.exec_unit == 'FPADDER':
                 return FPAdder(self.instruction)
-            elif self.instruction.exec_unit == 'FPMultiplier':
+            elif self.instruction.exec_unit == 'FPMULTIPLIER':
                 return FPMultiplier(self.instruction)
             else:
                 return FPDivider(self.instruction)
@@ -191,8 +190,8 @@ class FPAdder(Stage):
         self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
-        if global_data.FU_PIPELINED['FPAdder'] == 'no':
-            global_data.FU_STATUS['FPAdder'] = True
+        if global_data.FU_PIPELINED['FPADDER'] == 'NO':
+            global_data.FU_STATUS['FPADDER'] = True
 
         self.instruction.lockRegisters()
         if self.cycles > 0:
@@ -200,7 +199,7 @@ class FPAdder(Stage):
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
-            global_data.FU_STATUS['FPAdder'] = False
+            global_data.FU_STATUS['FPADDER'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
         else:
@@ -216,15 +215,15 @@ class FPMultiplier(Stage):
         self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
-        if global_data.FU_PIPELINED['FPMultiplier'] == 'no':
-            global_data.FU_STATUS['FPMultiplier'] = True
+        if global_data.FU_PIPELINED['FPMULTIPLIER'] == 'NO':
+            global_data.FU_STATUS['FPMULTIPLIER'] = True
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
-            global_data.FU_STATUS['FPMultiplier'] = False
+            global_data.FU_STATUS['FPMULTIPLIER'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
         else:
@@ -239,15 +238,15 @@ class FPDivider(Stage):
         self.cycles = simulator.get_cycles('EX', self.instruction)
 
     def execute(self):
-        if global_data.FU_PIPELINED['FPDivider'] == 'no':
-            global_data.FU_STATUS['FPDivider'] = True
+        if global_data.FU_PIPELINED['FPDIVIDER'] == 'NO':
+            global_data.FU_STATUS['FPDIVIDER'] = True
         self.instruction.lockRegisters()
         if self.cycles > 0:
             self.cycles -= 1
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
-            global_data.FU_STATUS['FPDivider'] = False
+            global_data.FU_STATUS['FPDIVIDER'] = False
             self.instruction.EX = str(global_data.CLOCK_CYCLE)
             return WriteBack(self.instruction)
         else:
@@ -260,24 +259,53 @@ class Mem(Stage):
     def __init__(self, instruction):
         self.name = 'EX'
         self.ONLY_ONCE = True
+        self.TAKE_BUS = False
         Stage.__init__(self, instruction)
         self.cycles = simulator.get_cycles('MEM', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
-        if self.cycles == 6:
-            if self.instruction.MISSED_DCACHE:
+        if self.instruction.MISSED_DCACHE:
+            if self.instruction.COMBINATION == 0:
                 if not global_data.ICACHE_USING_BUS:
-                    # print self.instruction.opcode + " seizing memory bus in cycle: " + str(global_data.CLOCK_CYCLE)
                     global_data.DCACHE_USING_BUS = True
-                if self.ONLY_ONCE:
-                    self.ONLY_ONCE = False
-                    global_data.JUST_ENTERED_BUS = True
-                if self.cycles > 0:
+                    if self.ONLY_ONCE:
+                        self.ONLY_ONCE = False
+                        global_data.JUST_ENTERED_BUS = True
+                    if self.cycles > 0:
+                        self.cycles -= 1
+            if self.instruction.COMBINATION == 1:
+                if not self.TAKE_BUS:
                     self.cycles -= 1
-        # if self.cycles ==
+                    self.TAKE_BUS = True
+                else:
+                    if not global_data.ICACHE_USING_BUS:
+                        global_data.DCACHE_USING_BUS = True
+                        if self.ONLY_ONCE:
+                            self.ONLY_ONCE = False
+                            global_data.JUST_ENTERED_BUS = True
+                        if self.cycles > 0:
+                            self.cycles -= 1
+            if self.instruction.COMBINATION == 2:
+                if not self.TAKE_BUS:
+                    if not global_data.ICACHE_USING_BUS:
+                        global_data.DCACHE_USING_BUS = True
+                        if self.ONLY_ONCE:
+                            self.ONLY_ONCE = False
+                            global_data.JUST_ENTERED_BUS = True
+                        if self.cycles > 0:
+                            self.instruction.missCycles -= 1
+                            self.cycles -= 1
+                            if self.instruction.missCycles == 0:
+                                self.TAKE_BUS = True
+                else:
+                    global_data.DCACHE_USING_BUS = False
+                    if self.cycles > 0:
+                        self.cycles -= 1
+
         elif self.cycles > 0:
             self.cycles -= 1
+
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
@@ -290,6 +318,7 @@ class Mem(Stage):
             global_data.DCACHE_USING_BUS = False
             self.instruction.Struct = 'Y'
         return self
+
 
 class WriteBack(Stage):
     def __init__(self, instruction):

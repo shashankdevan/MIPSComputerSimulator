@@ -21,6 +21,7 @@ class Instruction:
         self.FLUSH_FLAG = False
         self.MISSED_ICACHE = False
         self.MISSED_DCACHE = False
+        self.COMBINATION = -1
 
     def processOperand(self):
         if '(' in self.operands[0]:
@@ -29,7 +30,7 @@ class Instruction:
 
     def regAvailable(self):
         if self.opcode in ['LW', 'L.D']:
-            self.processOperand()
+            # self.processOperand()
             dest_blocked = global_data.RG_STATUS[self.dest]
             source_blocked = global_data.RG_STATUS[self.operands[0]]
             if dest_blocked:

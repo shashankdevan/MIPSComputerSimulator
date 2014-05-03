@@ -18,7 +18,6 @@ class ICache:
             global_data.ICACHE_HIT += 1
             return 1
         else:
-            global_data.ICACHE_USING_BUS = True
             global_data.ICACHE_MISS += 1
             global_data.icache.cache[cache_row].isValid = True
             return self.fetch_instr(index)
@@ -27,4 +26,4 @@ class ICache:
         cache_row = (index >> 2) & 3
         tag = index >> 4
         global_data.icache.cache[cache_row].TAG = tag
-        return 6
+        return global_data.INSTR_MEMORY_ACCESS_LATENCY

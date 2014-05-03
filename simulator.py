@@ -10,28 +10,41 @@ def parseInstruction(line):
     label = ""
     dest = ""
     opcode = ""
+    offset = 0
 
     if ':' in line:
-        label = line[:line.index(':')]
-        tokens = line[line.index(':') + 1:].split()
+        label = line[:line.index(':')].upper()
+        tokens = line[line.index(':') + 1:].strip().split(' ', 1)
     else:
-        tokens = line.split()
-    opcode = tokens[0]
+        tokens = line.strip().split(' ', 1)
     if len(tokens) > 1:
-        dest = tokens[1].strip(',')
-        for operand in tokens[2:]:
-            operands.append(operand.strip(','))
-    return Instruction(label, opcode, dest, operands)
+        opcode = tokens[0].upper()
+        tokens = tokens[1].split(',')
+        dest = tokens[0].strip().upper()
+        if len(tokens) > 1:
+            for token in tokens[1:]:
+                operands.append(token.strip().upper())
+    else:
+        opcode = tokens[0].upper()
+
+    if opcode in ['LW', 'SW', 'L.D', 'S.D']:
+        if '(' in operands[0]:
+            offset = int(operands[0][:int(operands[0].index('('))])
+            operands[0] = operands[0][int(operands[0].index('(')) + 1: int(operands[0].index(')'))]
+
+    inst = Instruction(label, opcode, dest, operands)
+    inst.offset = offset
+    return inst
 
 def get_exec_unit(inst):
     if inst.opcode in ['LW', 'SW', 'L.D', 'S.D', 'DADD', 'DSUB', 'DADDI', 'DSUBI', 'OR', 'ORI', 'AND', 'ANDI']:
         inst.exec_unit = 'IU'
     if inst.opcode in ['ADD.D','SUB.D']:
-        inst.exec_unit = 'FPAdder'
+        inst.exec_unit = 'FPADDER'
     if inst.opcode in ['MULT.D', 'MUL.D']:
-        inst.exec_unit = 'FPMultiplier'
+        inst.exec_unit = 'FPMULTIPLIER'
     if inst.opcode == 'DIV.D':
-        inst.exec_unit = 'FPDivider'
+        inst.exec_unit = 'FPDIVIDER'
 
 
 def loadInstructions(inst_file):
@@ -51,6 +64,13 @@ def loadRegisters(reg_file):
         reg = reg + str(cnt)
         global_data.REGISTERS[reg] = int(line, 2)
         global_data.RG_STATUS[reg] = False
+    cnt = -1
+    for i in range(32):
+        cnt = cnt + 1
+        reg = 'F'
+        reg = reg + str(cnt)
+        global_data.REGISTERS[reg] = int(line, 2)
+        global_data.RG_STATUS[reg] = False
 
 
 def loadData(mem_file):
@@ -63,23 +83,29 @@ def loadConfig(config_file):
     for line in config_file:
         FU = ''.join(line[:line.index(':')].upper().strip().split())
         tokens = line[line.index(':') + 1:].strip().split(',')
+
         if len(tokens) == 2:
             if (FU == "FPADDER"):
-                global_data.FU_CYCLES['FPAdder'] = int(tokens[0])
-                global_data.FU_PIPELINED['FPAdder'] = tokens[1].strip()
-            elif (FU == "FPMULTIPLIER"):
-                global_data.FU_CYCLES['FPMultiplier'] = int(tokens[0])
-                global_data.FU_PIPELINED['FPMultiplier'] = tokens[1].strip()
-            elif (FU == "FPDIVIDER"):
-                global_data.FU_CYCLES['FPDivider'] = int(tokens[0])
-                global_data.FU_PIPELINED['FPDivider'] = tokens[1].strip()
-            else:
-                pass
+                global_data.FU_CYCLES['FPADDER'] = int(tokens[0])
+                global_data.FU_PIPELINED['FPADDER'] = tokens[1].strip().upper()
+            if (FU == "FPMULTIPLIER"):
+                global_data.FU_CYCLES['FPMULTIPLIER'] = int(tokens[0])
+                global_data.FU_PIPELINED['FPMULTIPLIER'] = tokens[1].strip().upper()
+            if (FU == "FPDIVIDER"):
+                global_data.FU_CYCLES['FPDIVIDER'] = int(tokens[0])
+                global_data.FU_PIPELINED['FPDIVIDER'] = tokens[1].strip().upper()
+        else:
+            if (FU == "MAINMEMORY"):
+                global_data.MAIN_MEMORY_ACCESS_TIME = int(tokens[0].strip())
+            if (FU == "I-CACHE"):
+                global_data.I_CACHE_ACCESS_TIME = int(tokens[0].strip())
+            if (FU == "D-CACHE"):
+                global_data.D_CACHE_ACCESS_TIME = int(tokens[0].strip())
 
-    global_data.FU_PIPELINED['Mem'] = 'Yes'
+    global_data.FU_PIPELINED['Mem'] = 'YES'
     global_data.FU_CYCLES['Mem'] = 1
-
-    #put code to store I-Cache and D-Cache nos.
+    global_data.DATA_MEMORY_ACCESS_LATENCY = 2 * (global_data.D_CACHE_ACCESS_TIME + global_data.MAIN_MEMORY_ACCESS_TIME)
+    global_data.INSTR_MEMORY_ACCESS_LATENCY = 2 * (global_data.I_CACHE_ACCESS_TIME + global_data.MAIN_MEMORY_ACCESS_TIME)
 
 def get_cycles(stage, instruction):
     if stage == 'IF':
@@ -94,33 +120,53 @@ def get_cycles(stage, instruction):
     elif stage == 'EX' and instruction.opcode in ['LW','SW','L.D','S.D']:
         return 1
     elif stage == 'EX' and instruction.opcode in ['ADD.D', 'SUB.D']:
-        return global_data.FU_CYCLES['FPAdder']
+        return global_data.FU_CYCLES['FPADDER']
     elif stage == 'EX' and instruction.opcode in ['MULT.D', 'MUL.D']:
-        return global_data.FU_CYCLES['FPMultiplier']
+        return global_data.FU_CYCLES['FPMULTIPLIER']
     elif stage == 'EX' and instruction.opcode in ['DIV.D']:
-        return global_data.FU_CYCLES['FPDivider']
+        return global_data.FU_CYCLES['FPDIVIDER']
 
     elif stage == 'MEM' and instruction.opcode in ['LW']:
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
-        data, cycles = global_data.dcache.fetch_word(address ,1)
+        data, cycles, combination = global_data.dcache.fetch_word(address ,1)
         global_data.REGISTERS[instruction.dest] = data
+        instruction.COMBINATION = combination
         if cycles != 1:
             instruction.MISSED_DCACHE = True
         return cycles
 
     elif stage == 'MEM' and instruction.opcode in ['SW']:
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
-        cycles = global_data.dcache.store_word(address, global_data.REGISTERS[instruction.dest], 1)
+        cycles, combination = global_data.dcache.store_word(address, global_data.REGISTERS[instruction.dest], 1)
+        instruction.COMBINATION = combination
         if cycles != 1:
             instruction.MISSED_DCACHE = True
         return cycles
-    elif stage == 'MEM' and instruction.opcode in ['L.D','S.D']:
-        # handle the dcache miss for double word - free bus after use is done
+
+    elif stage == 'MEM' and instruction.opcode in ['L.D']:
         address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
-        data, cycles = global_data.dcache.fetch_word(address ,2)
-        if cycles != 1:
+        data, cycles, combination = global_data.dcache.fetch_word(address ,2)
+        instruction.COMBINATION = combination
+        if cycles != 2:
             instruction.MISSED_DCACHE = True
+            if cycles % 2 == 1:
+                instruction.missCycles = cycles - 1
+            else:
+                instruction.missCycles = cycles
         return cycles
+
+    elif stage == 'MEM' and instruction.opcode in ['S.D']:
+        address = global_data.REGISTERS[instruction.operands[0]] + instruction.offset
+        cycles, combination = global_data.dcache.store_word(address, global_data.REGISTERS[instruction.dest], 2)
+        instruction.COMBINATION = combination
+        if cycles != 2:
+            instruction.MISSED_DCACHE = True
+            if cycles % 2 == 1:
+                instruction.missCycles = cycles - 1
+            else:
+                instruction.missCycles = cycles
+        return cycles
+
     elif stage == 'MEM':
         return 1
     elif stage == 'WB':
@@ -134,6 +180,7 @@ def print_results():
     print '-' * 100
     print "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s" % (" ", "Instruction", "FT", "ID", "EX", "WB", "RAW", "WAR", "WAW", "Struct")
     print '-' * 100
+    global_data.RESULT_LIST[len(global_data.RESULT_LIST) - 1].ID = '-'
     for inst in global_data.RESULT_LIST:
         inst.printInst()
 
@@ -176,7 +223,6 @@ def assignPriority():
     global_data.EXQueue.clear()
     global_data.EXQueue = deque(nonpipelined + pipelined)
 
-    # print global_data.EXQueue
 
 def prioritizePipeline():
 
@@ -185,11 +231,6 @@ def prioritizePipeline():
     global_data.IUQueue.clear()
     global_data.EXQueue.clear()
     global_data.WBQueue.clear()
-
-    print "Original pipeline: ",
-    for s in global_data.pipeline:
-        print s.__class__.__name__,
-    print '\n'
 
     for s in global_data.pipeline:
         if s.name == 'WB':
@@ -205,13 +246,7 @@ def prioritizePipeline():
     assignPriority()
 
     p = []
-    # global_data.pipeline.clear()
     p = list(global_data.WBQueue) + list(global_data.EXQueue) + list(global_data.IUQueue) + list(global_data.IDQueue) + list(global_data.IFQueue)
-    print "Prioritized pipeline: ",
-    for s in p:
-        print s.__class__.__name__,
-    print '\n'
-    # global_data.pipeline = deque(p)
 
 def startSimulation():
     i = 0
@@ -220,11 +255,10 @@ def startSimulation():
     global_data.pipeline.append(fetch_stage)
 
     while(len(global_data.pipeline) > 0):
-        print "**************" + str(global_data.CLOCK_CYCLE) + "*******************"
-        # for s in global_data.pipeline:
-            # print s.instruction.opcode + " " + s.instruction.dest
-        # print "---INNER LOOP---"
+        print "******************* " + str(global_data.CLOCK_CYCLE) + " ***********************"
         prioritizePipeline()
+        for s in global_data.pipeline:
+            print s.instruction.opcode
 
         for stage in ['WB', 'EX', 'IU', 'ID', 'IF']:
             save_size = len(global_data.pipeline)
@@ -233,10 +267,9 @@ def startSimulation():
                 if curr_stage.name == stage:
                     if curr_stage.instruction.FLUSH_FLAG:
                         next_stage = curr_stage.flush()
-                        print curr_stage.instruction.opcode + " going from " + curr_stage.__class__.__name__ + " to " + next_stage.__class__.__name__ + " to flush"
                     else:
                         next_stage = curr_stage.next()
-                        print curr_stage.instruction.opcode + " going from " + curr_stage.__class__.__name__ + " to " + next_stage.__class__.__name__
+                        print curr_stage.instruction.opcode + " " + curr_stage.__class__.__name__ + " going to " + next_stage.__class__.__name__ + " in clock cycle: " + str(global_data.CLOCK_CYCLE)
                     if (next_stage != None):
                         next_stage.execute()
                         global_data.pipeline.append(next_stage)
@@ -246,9 +279,7 @@ def startSimulation():
                     global_data.pipeline.append(curr_stage)
                 save_size -= 1
 
-        print "Cn fetch? " + str(global_data.FU_STATUS['IF'])
         if(global_data.FU_STATUS['IF'] == False):
-            print "In Main Loop JUMP = " + str(global_data.JUMP)
             if global_data.JUMP:
                 i = global_data.JUMP_TO
                 global_data.JUMP = False
@@ -256,12 +287,10 @@ def startSimulation():
                 i += 1
             if i < len(global_data.INSTRUCTIONS):
                 next_inst = copy.deepcopy(global_data.INSTRUCTIONS[i])
-                print "Fetched " + next_inst.opcode
                 index = i
                 cache_row = (index >> 2) & 3
                 tag = index >> 4
                 if (not global_data.icache.cache[cache_row].isValid) or global_data.icache.cache[cache_row].TAG != tag:
-                    print "ICACHE MISS while fetching " + next_inst.opcode
                     if global_data.JUST_ENTERED_BUS:
                         global_data.DCACHE_USING_BUS = False
 
@@ -269,6 +298,7 @@ def startSimulation():
                     next_inst.FLUSH_FLAG = True
                     global_data.SET_FLUSH_NEXT = False
                 new_fetch_stage = Fetch(next_inst)
+                print "Fetched: " + new_fetch_stage.__class__.__name__
                 new_fetch_stage.execute()
                 global_data.pipeline.append(new_fetch_stage)
 

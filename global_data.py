@@ -21,15 +21,24 @@ RESULT_LIST = []
 FU_STATUS = {'IF': False,
              'ID': False,
              'IU': False,
-             'FPAdder': False,
-             'FPMultiplier': False,
-             'FPDivider': False,
+             'FPADDER': False,
+             'FPMULTIPLIER': False,
+             'FPDIVIDER': False,
              'MEM': False,
              'WB': False }
 RG_STATUS = collections.defaultdict(lambda: False)
 
 FU_CYCLES = collections.defaultdict(lambda: 0)
 FU_PIPELINED = collections.defaultdict(lambda: False)
+MAIN_MEMORY_ACCESS_TIME = 0
+D_CACHE_ACCESS_TIME = 0
+I_CACHE_ACCESS_TIME = 0
+DATA_MEMORY_ACCESS_LATENCY = 0
+INSTR_MEMORY_ACCESS_LATENCY = 0
+
+
+
+
 WB_USED = False
 FLUSH_NEXT = False
 SET_FLUSH_NEXT = False
@@ -38,7 +47,6 @@ JUMP_TO = 0
 
 DATA_SEGMENT_BASE_ADDR = 256
 JUST_ENTERED_BUS = False
-# MEMORY_BUS_BUSY = False
 ICACHE_USING_BUS = False
 DCACHE_USING_BUS = False
 
@@ -83,27 +91,3 @@ def reg_status():
 
 def resetFlags():
     WB_USED = False
-
-def mem_stage_tasks(instruction):
-    address = REGISTERS[instruction.operands[0]] + instruction.offset
-    if instruction.opcode in ['LW']:
-        data, cycles, bus_contention = dcache.fetch_word(address ,1)
-        if not bus_contention:
-            REGISTERS[instruction.operands[0]] = data
-            return True
-        else:
-            return False
-
-    if instruction.opcode in ['SW']:
-        pass
-
-    if instruction.opcode in ['L.D']:
-        data, cycles, bus_contention = dcache.fetch_word(address ,1)
-        if not bus_contention:
-            REGISTERS[instruction.operands[0]] = data
-            return True
-        else:
-            return False
-
-    if instruction.opcode in ['S.D']:
-        pass
