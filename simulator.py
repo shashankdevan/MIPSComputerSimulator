@@ -102,8 +102,8 @@ def loadConfig(config_file):
             if (FU == "D-CACHE"):
                 global_data.D_CACHE_ACCESS_TIME = int(tokens[0].strip())
 
-    global_data.FU_PIPELINED['Mem'] = 'YES'
-    global_data.FU_CYCLES['Mem'] = 1
+    global_data.FU_PIPELINED['MEM'] = 'YES'
+    global_data.FU_CYCLES['MEM'] = 1
     global_data.DATA_MEMORY_ACCESS_LATENCY = 2 * (global_data.D_CACHE_ACCESS_TIME + global_data.MAIN_MEMORY_ACCESS_TIME)
     global_data.INSTR_MEMORY_ACCESS_LATENCY = 2 * (global_data.I_CACHE_ACCESS_TIME + global_data.MAIN_MEMORY_ACCESS_TIME)
 
@@ -208,17 +208,17 @@ def assignPriority():
     pipelined = deque()
 
     for s in global_data.EXQueue:
-        if global_data.FU_PIPELINED[s.__class__.__name__] == 'No':
-            s.exec_cycles = global_data.FU_CYCLES[s.__class__.__name__]
+        if global_data.FU_PIPELINED[s.__class__.__name__.upper()] == 'NO':
+            s.exec_cycles = global_data.FU_CYCLES[s.__class__.__name__.upper()]
             nonpipelined.append(s)
-        elif global_data.FU_PIPELINED[s.__class__.__name__] == 'Yes':
-            s.exec_cycles = global_data.FU_CYCLES[s.__class__.__name__]
+        elif global_data.FU_PIPELINED[s.__class__.__name__.upper()] == 'YES':
+            s.exec_cycles = global_data.FU_CYCLES[s.__class__.__name__.upper()]
             pipelined.append(s)
 
     pipelined = list(pipelined)
-    pipelined.sort(key = lambda x: int(x.exec_cycles))
+    pipelined.sort(key = lambda x: int(x.exec_cycles), reverse=True)
     nonpipelined = list(nonpipelined)
-    nonpipelined.sort(key = lambda x: int(x.exec_cycles))
+    nonpipelined.sort(key = lambda x: int(x.exec_cycles), reverse=True)
 
     global_data.EXQueue.clear()
     global_data.EXQueue = deque(nonpipelined + pipelined)
@@ -247,6 +247,8 @@ def prioritizePipeline():
 
     p = []
     p = list(global_data.WBQueue) + list(global_data.EXQueue) + list(global_data.IUQueue) + list(global_data.IDQueue) + list(global_data.IFQueue)
+    global_data.pipeline.clear()
+    global_data.pipeline = deque(p)
 
 def startSimulation():
     i = 0
@@ -255,10 +257,7 @@ def startSimulation():
     global_data.pipeline.append(fetch_stage)
 
     while(len(global_data.pipeline) > 0):
-        print "******************* " + str(global_data.CLOCK_CYCLE) + " ***********************"
         prioritizePipeline()
-        for s in global_data.pipeline:
-            print s.instruction.opcode
 
         for stage in ['WB', 'EX', 'IU', 'ID', 'IF']:
             save_size = len(global_data.pipeline)
@@ -269,7 +268,6 @@ def startSimulation():
                         next_stage = curr_stage.flush()
                     else:
                         next_stage = curr_stage.next()
-                        print curr_stage.instruction.opcode + " " + curr_stage.__class__.__name__ + " going to " + next_stage.__class__.__name__ + " in clock cycle: " + str(global_data.CLOCK_CYCLE)
                     if (next_stage != None):
                         next_stage.execute()
                         global_data.pipeline.append(next_stage)
@@ -298,7 +296,6 @@ def startSimulation():
                     next_inst.FLUSH_FLAG = True
                     global_data.SET_FLUSH_NEXT = False
                 new_fetch_stage = Fetch(next_inst)
-                print "Fetched: " + new_fetch_stage.__class__.__name__
                 new_fetch_stage.execute()
                 global_data.pipeline.append(new_fetch_stage)
 
@@ -310,5 +307,5 @@ def startSimulation():
 if __name__ == '__main__':
     initialize()
     startSimulation()
-    print '\n\n\n'
+    print '\n'
     displayStatistics()
