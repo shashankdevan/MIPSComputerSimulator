@@ -51,7 +51,7 @@ class Cache:
                 return_value += global_data.DATA_MEMORY_ACCESS_LATENCY
 
             elif self.cache[blk_row][1].LRU_FLAG:
-                if self.cache[blk_row][0].DIRTY:
+                if self.cache[blk_row][1].DIRTY:
                     return_value += 6
                 self.cache[blk_row][1] = incoming_blk
                 self.cache[blk_row][1].LRU_FLAG = False

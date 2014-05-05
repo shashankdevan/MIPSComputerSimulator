@@ -295,6 +295,7 @@ def startSimulation():
                 if global_data.SET_FLUSH_NEXT:
                     next_inst.FLUSH_FLAG = True
                     global_data.SET_FLUSH_NEXT = False
+
                 new_fetch_stage = Fetch(next_inst)
                 new_fetch_stage.execute()
                 global_data.pipeline.append(new_fetch_stage)

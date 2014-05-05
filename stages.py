@@ -22,11 +22,13 @@ class Fetch(Stage):
         Stage.__init__(self, instruction)
         self.cycles = simulator.get_cycles('IF', self.instruction)
         global_data.FU_STATUS['IF'] = True
+        self.ONLY_ONCE = True
 
     def execute(self):
         if self.instruction.MISSED_ICACHE:
             if not global_data.DCACHE_USING_BUS:
                 global_data.ICACHE_USING_BUS = True
+                global_data.JUST_LEFT_BUS = False
                 if self.cycles > 0:
                     self.cycles -= 1
 
@@ -36,10 +38,16 @@ class Fetch(Stage):
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['ID'] == False:
             global_data.FU_STATUS['IF'] = False
+            if self.instruction.MISSED_ICACHE and self.ONLY_ONCE:
+                self.ONLY_ONCE = False
+                global_data.JUST_LEFT_BUS = True
             global_data.ICACHE_USING_BUS = False
             self.instruction.IF = str(global_data.CLOCK_CYCLE)
             return Decode(self.instruction)
         elif self.cycles == 0:
+            if self.instruction.MISSED_ICACHE and self.ONLY_ONCE:
+                self.ONLY_ONCE = False
+                global_data.JUST_LEFT_BUS = True
             global_data.ICACHE_USING_BUS = False
             self.instruction.MISSED_ICACHE = False
         return self
@@ -47,6 +55,9 @@ class Fetch(Stage):
     def flush(self):
         if self.cycles == 0 and global_data.FU_STATUS['ID'] == False:
             global_data.FU_STATUS['IF'] = False
+            if self.instruction.MISSED_ICACHE and self.ONLY_ONCE:
+                self.ONLY_ONCE = False
+                global_data.JUST_LEFT_BUS = True
             global_data.ICACHE_USING_BUS = False
             self.instruction.IF = str(global_data.CLOCK_CYCLE)
             global_data.RESULT_LIST.append(self.instruction)
@@ -274,6 +285,12 @@ class Mem(Stage):
                         global_data.JUST_ENTERED_BUS = True
                     if self.cycles > 0:
                         self.cycles -= 1
+                    if global_data.WANTED_BUS and global_data.JUST_LEFT_BUS:
+                        global_data.JUST_LEFT_BUS = False
+                        global_data.WANTED_BUS = False
+                        self.cycles -= 1
+                else:
+                    global_data.WANTED_BUS = True
             if self.instruction.COMBINATION == 1:
                 if not self.TAKE_BUS:
                     self.cycles -= 1
@@ -286,6 +303,16 @@ class Mem(Stage):
                             global_data.JUST_ENTERED_BUS = True
                         if self.cycles > 0:
                             self.cycles -= 1
+                        if global_data.WANTED_BUS and global_data.JUST_LEFT_BUS:
+                            global_data.JUST_LEFT_BUS = False
+                            global_data.WANTED_BUS = False
+                            self.cycles -= 1
+                        if global_data.WANTED_BUS and global_data.JUST_LEFT_BUS:
+                            global_data.JUST_LEFT_BUS = False
+                            global_data.WANTED_BUS = False
+                            self.cycles -= 1
+                    else:
+                        global_data.WANTED_BUS = True
             if self.instruction.COMBINATION == 2:
                 if not self.TAKE_BUS:
                     if not global_data.ICACHE_USING_BUS:
@@ -298,6 +325,12 @@ class Mem(Stage):
                             self.cycles -= 1
                             if self.instruction.missCycles == 0:
                                 self.TAKE_BUS = True
+                        if global_data.WANTED_BUS and global_data.JUST_LEFT_BUS:
+                            global_data.JUST_LEFT_BUS = False
+                            global_data.WANTED_BUS = False
+                            self.cycles -= 1
+                    else:
+                        global_data.WANTED_BUS = True
                 else:
                     global_data.DCACHE_USING_BUS = False
                     if self.cycles > 0:
@@ -305,7 +338,6 @@ class Mem(Stage):
 
         elif self.cycles > 0:
             self.cycles -= 1
-
 
     def next(self):
         if self.cycles == 0 and global_data.FU_STATUS['WB'] == False:
