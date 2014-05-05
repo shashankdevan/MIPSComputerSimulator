@@ -63,6 +63,9 @@ class Fetch(Stage):
             global_data.RESULT_LIST.append(self.instruction)
             return None
         elif self.cycles == 0:
+            if self.instruction.MISSED_ICACHE and self.ONLY_ONCE:
+                self.ONLY_ONCE = False
+                global_data.JUST_LEFT_BUS = True
             global_data.ICACHE_USING_BUS = False
             self.instruction.MISSED_ICACHE = False
         return self
@@ -272,7 +275,7 @@ class Mem(Stage):
         self.ONLY_ONCE = True
         self.TAKE_BUS = False
         Stage.__init__(self, instruction)
-        self.cycles = simulator.get_cycles('MEM', self.instruction)
+        self.cycles = self.returned_cycles = simulator.get_cycles('MEM', self.instruction)
 
     def execute(self):
         global_data.FU_STATUS['MEM'] = True
@@ -290,7 +293,8 @@ class Mem(Stage):
                         global_data.WANTED_BUS = False
                         self.cycles -= 1
                 else:
-                    global_data.WANTED_BUS = True
+                    if self.cycles == self.returned_cycles:
+                        global_data.WANTED_BUS = True
             if self.instruction.COMBINATION == 1:
                 if not self.TAKE_BUS:
                     self.cycles -= 1
@@ -312,7 +316,8 @@ class Mem(Stage):
                             global_data.WANTED_BUS = False
                             self.cycles -= 1
                     else:
-                        global_data.WANTED_BUS = True
+                        if self.cycles == self.returned_cycles:
+                            global_data.WANTED_BUS = True
             if self.instruction.COMBINATION == 2:
                 if not self.TAKE_BUS:
                     if not global_data.ICACHE_USING_BUS:
@@ -328,9 +333,12 @@ class Mem(Stage):
                         if global_data.WANTED_BUS and global_data.JUST_LEFT_BUS:
                             global_data.JUST_LEFT_BUS = False
                             global_data.WANTED_BUS = False
+                            self.instruction.missCycles -= 1
                             self.cycles -= 1
+
                     else:
-                        global_data.WANTED_BUS = True
+                        if self.cycles == self.returned_cycles:
+                            global_data.WANTED_BUS = True
                 else:
                     global_data.DCACHE_USING_BUS = False
                     if self.cycles > 0:
