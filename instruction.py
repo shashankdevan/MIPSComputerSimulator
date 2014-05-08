@@ -30,7 +30,6 @@ class Instruction:
 
     def regAvailable(self):
         if self.opcode in ['LW', 'L.D']:
-            # self.processOperand()
             dest_blocked = global_data.RG_STATUS[self.dest]
             source_blocked = global_data.RG_STATUS[self.operands[0]]
             if dest_blocked:
@@ -47,7 +46,6 @@ class Instruction:
             return not(source_blocked)
         elif self.opcode in ['BEQ', 'BNE']:
             dest_blocked = global_data.RG_STATUS[self.dest]
-            # print self.operands
             source_blocked = global_data.RG_STATUS[self.operands[0]]
             if dest_blocked or source_blocked:
                 self.RAW = 'Y'
@@ -80,7 +78,7 @@ class Instruction:
         if (len(self.operands) == 2):
             printString = self.opcode + " " + self.dest + ', ' + self.operands[0] + ', ' +  self.operands[1]
         elif (len(self.operands) == 1):
-            printString = self.opcode + " " + self.dest + ', ' + self.operands[0]
+            printString = self.opcode + " " + self.dest + ', ' + str(self.offset) + '(' + self.operands[0] + ')'
         elif (len(self.operands) == 0):
             printString = self.opcode + " " + self.dest
 

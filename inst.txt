@@ -1,5 +1,4 @@
-L.D F1,4(R4)
-SW R2,4(R4)
-L.D F2,4(R6)
-HLT
+L.D F1                ,4(R4)
+ADD.D       F2,F2,     F1
+            HLT
 HLT
