@@ -8,15 +8,15 @@ class Instruction:
         self.dest = dest
         self.operands = operands
         self.exec_unit = ""
-        self.IF = "-"
-        self.ID = "-"
-        self.EX = "-"
-        self.MEM = "-"
-        self.WB = "-"
-        self.Struct = '-'
-        self.WAW = '-'
-        self.RAW = '-'
-        self.WAR = '-'
+        self.IF = ""
+        self.ID = ""
+        self.EX = ""
+        self.MEM = ""
+        self.WB = ""
+        self.Struct = 'N'
+        self.WAW = 'N'
+        self.RAW = 'N'
+        self.WAR = 'N'
         self.offset = 0
         self.FLUSH_FLAG = False
         self.MISSED_ICACHE = False
@@ -73,7 +73,7 @@ class Instruction:
         elif self.opcode in ['DADD', 'DADDI','DSUB','DSUBI','AND','ANDI','OR','ORI', 'ADD.D', 'SUB.D', 'MULT.D', 'MUL.D', 'DIV.D']:
             global_data.RG_STATUS[self.dest] = False
 
-    def printInst(self):
+    def printInst(self,):
 
         if (len(self.operands) == 2):
             printString = self.opcode + " " + self.dest + ', ' + self.operands[0] + ', ' +  self.operands[1]
@@ -82,4 +82,4 @@ class Instruction:
         elif (len(self.operands) == 0):
             printString = self.opcode + " " + self.dest
 
-        print "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s" % (self.label, printString, self.IF, self.ID, self.EX, self.WB, self.RAW, self.WAR, self.WAW, self.Struct)
+        global_data.output += "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\n" % (self.label, printString, self.IF, self.ID, self.EX, self.WB, self.RAW, self.WAR, self.WAW, self.Struct)

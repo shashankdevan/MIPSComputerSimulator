@@ -177,31 +177,34 @@ def get_cycles(stage, instruction):
 def print_results():
     global_data.RESULT_LIST.sort(key = lambda x: int(x.IF))
 
-    print '-' * 100
-    print "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s" % (" ", "Instruction", "FT", "ID", "EX", "WB", "RAW", "WAR", "WAW", "Struct")
-    print '-' * 100
-    global_data.RESULT_LIST[len(global_data.RESULT_LIST) - 1].ID = '-'
+    global_data.output += '-' * 100 + '\n'
+    global_data.output += "%5s %-10s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\t%5s\n" % (" ", "Instruction", "FT", "ID", "EX", "WB", "RAW", "WAR", "WAW", "Struct")
+    global_data.output += '-' * 100 + '\n'
+
+    global_data.RESULT_LIST[len(global_data.RESULT_LIST) - 1].ID = ''
     for inst in global_data.RESULT_LIST:
         inst.printInst()
 
 def initialize():
-    if (len(sys.argv) != 5):
+    if (len(sys.argv) != 6):
         print "Usage: simulator inst.txt data.txt reg.txt config.txt result.txt"
         exit()
     inst_file = open(sys.argv[1])
     mem_file = open(sys.argv[2])
     reg_file = open(sys.argv[3])
     config_file = open(sys.argv[4])
+    global_data.result_file = sys.argv[5]
+
     loadInstructions(inst_file)
     loadRegisters(reg_file)
     loadData(mem_file)
     loadConfig(config_file)
 
 def displayStatistics():
-    print "Total number of requests to instruction cache: " + str(global_data.ICACHE_ACCESS)
-    print "Total number of instruction cache hits: " + str(global_data.ICACHE_HIT)
-    print "Total number of requests to data cache: " + str(global_data.DCACHE_ACCESS)
-    print "Total number of data cache hits: " + str(global_data.DCACHE_HIT)
+    global_data.output += "Total number of requests to instruction cache: " + str(global_data.ICACHE_ACCESS) + '\n'
+    global_data.output += "Total number of instruction cache hits: " + str(global_data.ICACHE_HIT) + '\n'
+    global_data.output += "Total number of requests to data cache: " + str(global_data.DCACHE_ACCESS) + '\n'
+    global_data.output += "Total number of data cache hits: " + str(global_data.DCACHE_HIT) + '\n'
 
 def assignPriority():
     nonpipelined = deque()
@@ -305,8 +308,14 @@ def startSimulation():
 
     print_results()
 
+def outputResult():
+    result = open(global_data.result_file, 'w')
+    print global_data.output
+    result.write(global_data.output)
+
 if __name__ == '__main__':
     initialize()
     startSimulation()
-    print '\n'
+    global_data.output += '\n'
     displayStatistics()
+    outputResult()

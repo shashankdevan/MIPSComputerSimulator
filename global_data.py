@@ -82,6 +82,10 @@ ICACHE_ACCESS = 0
 ICACHE_HIT = 0
 ICACHE_MISS = 0
 
+result_file = ""
+output = ""
+
+
 def get_label_index(label):
     for i in range(len(INSTRUCTIONS)):
         if INSTRUCTIONS[i].label == label:

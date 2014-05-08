@@ -1,10 +1,12 @@
-instruction                   	IF		ID		EX		WB		RAW		WAR		WAW		Struct
-l.d f1                ,4(r4)  	6		7		15		16		N		N		N		N
-add.d       f2,f2,     f1     	7		16		20		21		Y		N		N		N
-hlt                           	16		17						N		N		N		N
-hlt                           	17								N		N		N		N
+----------------------------------------------------------------------------------------------------
+      Instruction	   FT	   ID	   EX	   WB	  RAW	  WAR	  WAW	Struct
+----------------------------------------------------------------------------------------------------
+      L.D F1, 4(R4)	    6	    7	   15	   16	    N	    N	    N	    N
+      ADD.D F2, F2, F1	    7	   16	   20	   21	    Y	    N	    N	    N
+      HLT       	   16	   17	     	     	    N	    N	    N	    N
+      HLT       	   17	     	     	     	    N	    N	    N	    N
 
-Total number of requests to instruction cache  4
-Total number of instruction cache hit  3
-Total number of requests to data cache  2
-Total number of data cache hit  1
+Total number of requests to instruction cache: 4
+Total number of instruction cache hits: 3
+Total number of requests to data cache: 2
+Total number of data cache hits: 1
